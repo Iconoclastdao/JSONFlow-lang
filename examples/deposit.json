@@ -1,0 +1,73 @@
+ {
+  "function": "deposit",
+  "schema": {
+    "inputs": {
+      "sender": "string",
+      "amount": { "type": "int", "min": 1 }
+    },
+    "context": {
+      "balances": "dict<string, int>"
+    }
+  },
+  "context": {
+    "balances": {}
+  },
+  "steps": [
+    {
+      "let": {
+        "current_balance": { "get": ["balances", "sender"] },
+        "new_balance": {
+          "expr": {
+            "add": [
+              { "get": ["balances", "sender"] },
+              { "get": "amount" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "assert": {
+        "condition": {
+          "compare": {
+            "left": "amount",
+            "op": ">",
+            "right": 0
+          }
+        },
+        "message": "Amount must be greater than zero"
+      }
+    },
+    {
+      "if": {
+        "not_in": {
+          "key": "sender",
+          "dict": "balances"
+        }
+      },
+      "then": {
+        "set": {
+          "target": ["balances", "sender"],
+          "value": 0
+        }
+      }
+    },
+    {
+      "set": {
+        "target": ["balances", "sender"],
+        "value": { "get": "new_balance" }
+      }
+    },
+    {
+      "log": {
+        "level": "info",
+        "message": [
+          "'Deposited'", "amount", "'to'", "sender", "'New balance:'", { "get": "new_balance" }
+        ]
+      }
+    },
+    {
+      "return": { "get": "new_balance" }
+    }
+  ]
+}

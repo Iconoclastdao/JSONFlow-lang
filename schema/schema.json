@@ -1,0 +1,262 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JSONFlow Program Schema",
+  "type": "object",
+  "required": ["function", "schema", "steps"],
+  "properties": {
+    "function": {
+      "type": "string",
+      "description": "The unique name of this function/flow"
+    },
+    "schema": {
+      "type": "object",
+      "required": ["inputs", "context"],
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "description": "Input types required to run the flow",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["string", "int", "float", "bool", "dict", "array"]
+              },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "enum": { "type": "array" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "context": {
+          "type": "object",
+          "description": "Initial context variable types",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "description": "Initial context values",
+      "default": {},
+      "additionalProperties": true
+    },
+    "steps": {
+      "type": "array",
+      "description": "Ordered list of operations in the program",
+      "items": { "$ref": "#/definitions/step" }
+    }
+  },
+  "definitions": {
+    "step": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "let": {
+          "type": "object",
+          "description": "Declare and bind computed values",
+          "additionalProperties": { "$ref": "#/definitions/expr" }
+        },
+        "set": {
+          "type": "object",
+          "description": "Mutate context by setting a value",
+          "required": ["target", "value"],
+          "properties": {
+            "target": {
+              "anyOf": [
+                { "type": "string" },
+                {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              ]
+            },
+            "value": { "$ref": "#/definitions/expr" }
+          }
+        },
+        "assert": {
+          "type": "object",
+          "required": ["condition", "message"],
+          "description": "Ensure that a condition holds, else raise error",
+          "properties": {
+            "condition": { "$ref": "#/definitions/expr" },
+            "message": { "type": "string" }
+          }
+        },
+        "if": {
+          "type": "object",
+          "description": "Conditional execution",
+          "required": ["condition", "then"],
+          "properties": {
+            "condition": { "$ref": "#/definitions/expr" },
+            "then": { "$ref": "#/definitions/step" },
+            "else": { "$ref": "#/definitions/step" }
+          }
+        },
+        "map": {
+          "type": "object",
+          "description": "Apply a transformation to a list",
+          "required": ["source", "as", "body", "target"],
+          "properties": {
+            "source": { "type": "string" },
+            "as": { "type": "string" },
+            "body": { "type": "array", "items": { "$ref": "#/definitions/step" } },
+            "target": { "type": "string" }
+          }
+        },
+        "forEach": {
+          "type": "object",
+          "description": "Execute steps for each element in an array",
+          "required": ["source", "as", "body"],
+          "properties": {
+            "source": { "type": "string" },
+            "as": { "type": "string" },
+            "body": { "type": "array", "items": { "$ref": "#/definitions/step" } }
+          }
+        },
+        "try": {
+          "type": "object",
+          "description": "Attempt a sequence of steps and optionally catch errors",
+          "required": ["body"],
+          "properties": {
+            "body": { "type": "array", "items": { "$ref": "#/definitions/step" } },
+            "catch": { "type": "array", "items": { "$ref": "#/definitions/step" } }
+          }
+        },
+        "log": {
+          "type": "object",
+          "required": ["level", "message"],
+          "description": "Log a message",
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": ["debug", "info", "warn", "error"]
+            },
+            "message": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  { "type": "string" },
+                  { "$ref": "#/definitions/expr" }
+                ]
+              }
+            }
+          }
+        },
+        "print": {
+          "type": "object",
+          "description": "Print values to stdout",
+          "required": ["values"],
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": {
+                "anyOf": [{ "type": "string" }, { "$ref": "#/definitions/expr" }]
+              }
+            }
+          }
+        },
+        "return": {
+          "type": "object",
+          "required": ["get"],
+          "description": "Return a value from the flow",
+          "properties": {
+            "get": {
+              "anyOf": [
+                { "type": "string" },
+                {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expr": {
+      "type": "object",
+      "description": "Expression node that evaluates to a value",
+      "properties": {
+        "get": { "type": "string" },
+        "value": { "type": ["string", "number", "boolean", "object", "array"] },
+        "add": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/valueOrExpr" }
+        },
+        "subtract": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/valueOrExpr" }
+        },
+        "multiply": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/valueOrExpr" }
+        },
+        "divide": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/valueOrExpr" }
+        },
+        "mod": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/valueOrExpr" }
+        },
+        "abs": {
+          "type": "object",
+          "properties": {
+            "value": { "$ref": "#/definitions/valueOrExpr" }
+          }
+        },
+        "compare": {
+          "type": "object",
+          "required": ["left", "op", "right"],
+          "properties": {
+            "left": { "$ref": "#/definitions/valueOrExpr" },
+            "op": {
+              "type": "string",
+              "enum": ["<", ">", "==", "<=", ">=", "!="]
+            },
+            "right": { "$ref": "#/definitions/valueOrExpr" }
+          }
+        },
+        "not": {
+          "$ref": "#/definitions/expr"
+        },
+        "and": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/expr" }
+        },
+        "or": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/expr" }
+        },
+        "length": {
+          "type": "string",
+          "description": "Resolve length of a list or string"
+        },
+        "in": {
+          "type": "object",
+          "required": ["item", "array"],
+          "properties": {
+            "item": { "$ref": "#/definitions/valueOrExpr" },
+            "array": { "$ref": "#/definitions/valueOrExpr" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "valueOrExpr": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "$ref": "#/definitions/expr" }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

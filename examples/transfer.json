@@ -1,0 +1,95 @@
+{
+  "function": "transfer",
+  "schema": {
+    "inputs": {
+      "sender": "string",
+      "recipient": "string",
+      "amount": { "type": "int", "min": 1 }
+    },
+    "context": {
+      "balances": "dict<string, int>"
+    }
+  },
+  "context": {
+    "balances": {
+      "alice": 100,
+      "bob": 50
+    }
+  },
+  "steps": [
+    {
+      "assert": {
+        "condition": {
+          "compare": {
+            "left": {
+              "get": ["balances", "sender"]
+            },
+            "op": ">=",
+            "right": {
+              "get": "amount"
+            }
+          }
+        },
+        "message": "Insufficient balance"
+      }
+    },
+    {
+      "set": {
+        "target": ["balances", "sender"],
+        "value": {
+          "expr": {
+            "subtract": [
+              { "get": ["balances", "sender"] },
+              { "get": "amount" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "condition": {
+          "compare": {
+            "left": {
+              "get": ["balances", "recipient"]
+            },
+            "op": "==",
+            "right": null
+          }
+        },
+        "then": {
+          "set": {
+            "target": ["balances", "recipient"],
+            "value": 0
+          }
+        }
+      }
+    },
+    {
+      "set": {
+        "target": ["balances", "recipient"],
+        "value": {
+          "expr": {
+            "add": [
+              { "get": ["balances", "recipient"] },
+              { "get": "amount" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "log": {
+        "level": "info",
+        "message": [
+          "'Transferred'", "amount", "'from'", "sender", "'to'", "recipient"
+        ]
+      }
+    },
+    {
+      "return": {
+        "get": ["balances", "recipient"]
+      }
+    }
+  ]
+}

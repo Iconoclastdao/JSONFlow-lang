@@ -1,0 +1,37 @@
+{
+  "function": "square",
+  "schema": {
+    "inputs": {
+      "x": { "type": "int" }
+    },
+    "context": {
+      "result": "int"
+    }
+  },
+  "context": {
+    "result": 0
+  },
+  "steps": [
+    {
+      "let": {
+        "result": {
+          "expr": {
+            "multiply": [
+              { "get": "x" },
+              { "get": "x" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "log": {
+        "level": "info",
+        "message": ["'Square of'", "x", "'is'", { "get": "result" }]
+      }
+    },
+    {
+      "return": { "get": "result" }
+    }
+  ]
+}
