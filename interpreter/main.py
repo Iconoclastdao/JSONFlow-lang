@@ -3,7 +3,8 @@ import argparse
 import sys
 import os
 import traceback
-from runtime import Context, run_steps
+from multiprocessing import Process, Queue
+from runtime import Context
 
 try:
     from colorama import Fore, Style
@@ -45,6 +46,12 @@ def validate_schema(flow):
         schema = json.load(f)
     validate(instance=flow, schema=schema)
 
+def run_flow_in_process(flow_steps, context_data, queue):
+    from runtime import Context, run_steps
+    ctx = Context(initial=context_data)
+    result = run_steps(flow_steps, ctx)
+    queue.put((result, ctx.data))
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run a JSONFlow program.",
@@ -79,9 +86,18 @@ JSONFlow files should contain at least 'steps'. Optional: 'schema', 'context'
             user_ctx = load_context(args.context)
             initial_context.update(user_ctx)
 
-        ctx = Context(initial=initial_context)
+        # 🚨 Run flow with timeout in sandboxed process
+        queue = Queue()
+        p = Process(target=run_flow_in_process, args=(flow["steps"], initial_context, queue))
+        p.start()
+        p.join(timeout=2)
 
-        result = run_steps(flow["steps"], ctx)
+        if p.is_alive():
+            p.terminate()
+            raise TimeoutError("Execution timed out")
+
+        result, final_ctx = queue.get()
+        ctx = Context(initial=final_ctx)
 
         if result is not None:
             print_color("Result: " + str(result), Fore.GREEN)
