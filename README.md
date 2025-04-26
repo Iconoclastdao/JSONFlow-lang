@@ -99,11 +99,17 @@ Add `--debug` to print final state. Use `--output` to save result.
 
 ## 🔒 License
 
-All Rights Reserved © 2025 James Chapman
+JSONFlow is released under a **dual-license** model:
 
-This software is **not open source**.  
-To use, distribute, or license JSONFlow for commercial or personal projects, contact: [iconoclastdao@gmail.com](mailto:iconoclastdao@gmail.com)
+- 🆓 **MIT License** – for non-commercial use only  
+- 💼 **Commercial License** – required for any commercial use
 
+All Rights Reserved © 2025 James Chapman  
+To use, distribute, or license JSONFlow for commercial or private business purposes, you **must** obtain a commercial license.
+
+📩 Contact: [iconoclastdao@gmail.com](mailto:iconoclastdao@gmail.com)
+
+For full terms, see [LICENSE.md](./LICENSE.md)
 ---
 
 ## 🌐 Vision
