@@ -11,7 +11,15 @@
 
 ## 🧠 What is JSONFlow?
 
-**JSONFlow** is a proof-of-concept programming language that merges the readability of JSON with the expressiveness of Python-like logic.  
+**JSONFlow**  A universal, interpretable logic layer that lets AI and humans write verifiable programs in structured natural language.
+From smart contracts to automations, JSONFlow is the interface that turns thoughts into code — safely, schema-validated, and ready for the on-chain world.”
+
+
+
+e.g., "Add 5 and 3 and call it total" → Python / Solidity / JavaScript / Rust (WASM) → Executed in sandbox
+
+⸻
+is a proof-of-concept programming language that merges the readability of JSON with the expressiveness of Python-like logic.  
 It allows developers to write logic in a fully structured, schema-validatable format that is:
 
 - 🔐 Safe (no `eval`, no arbitrary code)  
