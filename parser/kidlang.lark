@@ -1,0 +1,26 @@
+start: statement+
+
+?statement: assignment
+          | conditional
+          | loop
+          | say
+
+assignment: "remember" "my" "name" "is" NAME              -> remember_name
+          | "add" NUMBER "and" NUMBER "and call it" NAME  -> add_expr
+
+conditional: "if" NAME comparison_op NUMBER "," "say" ESCAPED_STRING  -> if_stmt
+
+loop: "repeat" NUMBER "times" "," "say" ESCAPED_STRING    -> repeat_stmt
+
+say: "say" ESCAPED_STRING                                 -> say_stmt
+
+comparison_op: "is greater than" -> gt
+             | "is less than"    -> lt
+             | "equals"          -> eq
+
+NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
+NUMBER: /\d+/
+
+%import common.ESCAPED_STRING
+%import common.WS
+%ignore WS
