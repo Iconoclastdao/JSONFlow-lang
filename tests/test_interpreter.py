@@ -1,50 +1,45 @@
 import unittest
-import json
-import os
-from interpreter.runtime import Context, run_steps
+from nl_to_jsonflow import parse_natural_language
+from execute_jsonflow import run_steps, Context
+from javascript import generate_javascript_function
+from rust import generate_rust_function
+from python import generate_python_function
+import asyncio
 
-def load_json(path):
-    with open(path, 'r') as f:
-        return json.load(f)
+class TestJSONFlow(unittest.TestCase):
+    def setUp(self):
+        self.sentences = [
+            "set balance to 100",
+            "if balance is greater than 50, then append 'approved' to logs",
+            "try set balance to 200 catch log error"
+        ]
+        self.flow = parse_natural_language(self.sentences)
 
-class TestJSONFlowExamples(unittest.TestCase):
+    def test_parsing(self):
+        self.assertIn("steps", self.flow)
+        self.assertEqual(len(self.flow["steps"]), 3)
+        self.assertEqual(self.flow["steps"][0]["set"]["target"], "balance")
 
-    def test_square(self):
-        flow = load_json('examples/square.json')
-        ctx = Context(initial={"x": 5})
-        result = run_steps(flow["steps"], ctx)
-        self.assertEqual(result, 25)
-        self.assertEqual(ctx.get("result"), 25)
+    def test_execution(self):
+        ctx = Context({}, {"balance": "integer", "logs": "array"})
+        asyncio.run(run_steps(self.flow["steps"], ctx))
+        self.assertEqual(ctx.data["balance"], 200)
+        self.assertIn("approved", ctx.data["logs"])
 
-    def test_transfer(self):
-        flow = load_json('examples/transfer.json')
-        ctx = Context(initial={
-            "sender": "alice",
-            "recipient": "bob",
-            "amount": 25,
-            "balances": {
-                "alice": 100,
-                "bob": 50
-            }
-        })
-        result = run_steps(flow["steps"], ctx)
-        self.assertEqual(result, 75)
-        self.assertEqual(ctx.get(["balances", "alice"]), 75)
-        self.assertEqual(ctx.get(["balances", "bob"]), 75)
+    def test_javascript_generation(self):
+        code = generate_javascript_function(self.flow)
+        self.assertIn("async function Workflow", code)
+        self.assertIn("logs.push(\"approved\")", code)
 
-    def test_transfer_insufficient_funds(self):
-        flow = load_json('examples/transfer.json')
-        ctx = Context(initial={
-            "sender": "alice",
-            "recipient": "bob",
-            "amount": 200,
-            "balances": {
-                "alice": 100,
-                "bob": 50
-            }
-        })
-        with self.assertRaises(AssertionError):
-            run_steps(flow["steps"], ctx)
+    def test_rust_generation(self):
+        code = generate_rust_function(self.flow)
+        self.assertIn("async fn workflow", code)
+        self.assertIn("context.logs.push(\"approved\")", code)
 
-if __name__ == '__main__':
+    def test_python_generation(self):
+        code = generate_python_function(self.flow)
+        self.assertIn("async def workflow", code)
+        self.assertIn("logs.append(\"approved\")", code)
+
+if __name__ == "__main__":
     unittest.main()
