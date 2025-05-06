@@ -1,3 +1,5 @@
+
+
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "JSONFlow Program Schema",
@@ -21,23 +23,27 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["string", "int", "float", "bool", "dict", "array"]
+                "enum": ["string", "int", "float", "bool", "object", "array"]
               },
-              "min": { "type": "number" },
-              "max": { "type": "number" },
+              "minimum": { "type": "number" },
+              "maximum": { "type": "number" },
+              "minLength": { "type": "integer", "minimum": 0 },
+              "maxLength": { "type": "integer", "minimum": 0 },
               "enum": { "type": "array" },
               "description": { "type": "string" }
-            }
+            },
+            "additionalProperties": false
           }
         },
         "context": {
           "type": "object",
           "description": "Initial context variable types",
           "additionalProperties": {
-            "type": "string"
+            "type": ["string", "number", "boolean", "object", "array"]
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "context": {
       "type": "object",
@@ -77,7 +83,8 @@
               ]
             },
             "value": { "$ref": "#/definitions/expr" }
-          }
+          },
+          "additionalProperties": false
         },
         "assert": {
           "type": "object",
@@ -86,7 +93,8 @@
           "properties": {
             "condition": { "$ref": "#/definitions/expr" },
             "message": { "type": "string" }
-          }
+          },
+          "additionalProperties": false
         },
         "if": {
           "type": "object",
@@ -94,9 +102,20 @@
           "required": ["condition", "then"],
           "properties": {
             "condition": { "$ref": "#/definitions/expr" },
-            "then": { "$ref": "#/definitions/step" },
-            "else": { "$ref": "#/definitions/step" }
-          }
+            "then": {
+              "anyOf": [
+                { "$ref": "#/definitions/step" },
+                { "type": "array", "items": { "$ref": "#/definitions/step" } }
+              ]
+            },
+            "else": {
+              "anyOf": [
+                { "$ref": "#/definitions/step" },
+                { "type": "array", "items": { "$ref": "#/definitions/step" } }
+              ]
+            }
+          },
+          "additionalProperties": false
         },
         "map": {
           "type": "object",
@@ -107,7 +126,8 @@
             "as": { "type": "string" },
             "body": { "type": "array", "items": { "$ref": "#/definitions/step" } },
             "target": { "type": "string" }
-          }
+          },
+          "additionalProperties": false
         },
         "forEach": {
           "type": "object",
@@ -117,7 +137,8 @@
             "source": { "type": "string" },
             "as": { "type": "string" },
             "body": { "type": "array", "items": { "$ref": "#/definitions/step" } }
-          }
+          },
+          "additionalProperties": false
         },
         "try": {
           "type": "object",
@@ -126,7 +147,8 @@
           "properties": {
             "body": { "type": "array", "items": { "$ref": "#/definitions/step" } },
             "catch": { "type": "array", "items": { "$ref": "#/definitions/step" } }
-          }
+          },
+          "additionalProperties": false
         },
         "log": {
           "type": "object",
@@ -146,7 +168,8 @@
                 ]
               }
             }
-          }
+          },
+          "additionalProperties": false
         },
         "print": {
           "type": "object",
@@ -159,7 +182,8 @@
                 "anyOf": [{ "type": "string" }, { "$ref": "#/definitions/expr" }]
               }
             }
-          }
+          },
+          "additionalProperties": false
         },
         "return": {
           "type": "object",
@@ -175,7 +199,8 @@
                 }
               ]
             }
-          }
+          },
+          "additionalProperties": false
         }
       }
     },
@@ -209,7 +234,8 @@
           "type": "object",
           "properties": {
             "value": { "$ref": "#/definitions/valueOrExpr" }
-          }
+          },
+          "additionalProperties": false
         },
         "compare": {
           "type": "object",
@@ -221,11 +247,10 @@
               "enum": ["<", ">", "==", "<=", ">=", "!="]
             },
             "right": { "$ref": "#/definitions/valueOrExpr" }
-          }
+          },
+          "additionalProperties": false
         },
-        "not": {
-          "$ref": "#/definitions/expr"
-        },
+        "not": { "$ref": "#/definitions/expr" },
         "and": {
           "type": "array",
           "items": { "$ref": "#/definitions/expr" }
@@ -244,7 +269,8 @@
           "properties": {
             "item": { "$ref": "#/definitions/valueOrExpr" },
             "array": { "$ref": "#/definitions/valueOrExpr" }
-          }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
