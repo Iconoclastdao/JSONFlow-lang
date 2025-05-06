@@ -4,19 +4,40 @@ start: statement+
           | conditional
           | loop
           | say
+          | try_catch
+          | map_stmt
+          | call_stmt
+          | assert_stmt
+          | return_stmt
 
 assignment: "remember" "my" "name" "is" NAME              -> remember_name
           | "add" NUMBER "and" NUMBER "and call it" NAME  -> add_expr
+          | "set" NAME "to" VALUE                        -> set_value
+          | "append" VALUE "to" NAME                     -> append_value
 
-conditional: "if" NAME comparison_op NUMBER "," "say" ESCAPED_STRING  -> if_stmt
+conditional: "if" NAME comparison_op NUMBER "," "then" statement+ ("otherwise" statement+)? -> if_stmt
 
-loop: "repeat" NUMBER "times" "," "say" ESCAPED_STRING    -> repeat_stmt
+loop: "repeat" NUMBER "times" "," statement+              -> repeat_stmt
+    | "for each" NAME "in" NAME "," statement+           -> foreach_stmt
 
-say: "say" ESCAPED_STRING                                 -> say_stmt
+try_catch: "try" statement+ "catch" statement+            -> try_catch_stmt
+
+map_stmt: "map" NAME "to" NAME "by adding" NUMBER        -> map_add_stmt
+
+call_stmt: "call" NAME "with" VALUE "and save to" NAME   -> call_stmt
+
+assert_stmt: "assert" NAME comparison_op NUMBER "or say" ESCAPED_STRING -> assert_stmt
+
+return_stmt: "return" NAME                               -> return_stmt
+
+say: "say" ESCAPED_STRING                                -> say_stmt
 
 comparison_op: "is greater than" -> gt
              | "is less than"    -> lt
              | "equals"          -> eq
+             | "is not equal to" -> neq
+
+VALUE: NUMBER | ESCAPED_STRING | "true" | "false"
 
 NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
 NUMBER: /\d+/
