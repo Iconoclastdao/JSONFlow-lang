@@ -1,5 +1,3 @@
-
-
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "JSONFlow Program Schema",
@@ -8,7 +6,9 @@
   "properties": {
     "function": {
       "type": "string",
-      "description": "The unique name of this function/flow"
+      "description": "The unique name of this function or workflow, used to identify the flow in execution contexts.",
+      "minLength": 1,
+      "$comment": "Example: 'LightProtocol'"
     },
     "schema": {
       "type": "object",
@@ -16,45 +16,55 @@
       "properties": {
         "inputs": {
           "type": "object",
-          "description": "Input types required to run the flow",
+          "description": "Defines the input parameters required to execute the flow, with type constraints and validation rules.",
           "additionalProperties": {
             "type": "object",
             "required": ["type"],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["string", "int", "float", "bool", "object", "array"]
+                "enum": ["string", "integer", "number", "boolean", "object", "array"],
+                "description": "The JSON type of the input ('integer' for whole numbers, 'number' for floating-point)."
               },
-              "minimum": { "type": "number" },
-              "maximum": { "type": "number" },
-              "minLength": { "type": "integer", "minimum": 0 },
-              "maxLength": { "type": "integer", "minimum": 0 },
-              "enum": { "type": "array" },
-              "description": { "type": "string" }
+              "minimum": { "type": "number", "description": "Inclusive minimum value for numbers." },
+              "maximum": { "type": "number", "description": "Inclusive maximum value for numbers." },
+              "exclusiveMinimum": { "type": "number", "description": "Exclusive minimum value for numbers." },
+              "exclusiveMaximum": { "type": "number", "description": "Exclusive maximum value for numbers." },
+              "minLength": { "type": "integer", "minimum": 0, "description": "Minimum length for strings or arrays." },
+              "maxLength": { "type": "integer", "minimum": 0, "description": "Maximum length for strings or arrays." },
+              "enum": { "type": "array", "items": {}, "description": "Allowed values for the input." },
+              "description": { "type": "string", "description": "A human-readable description of the input's purpose." }
             },
             "additionalProperties": false
-          }
+          },
+          "$comment": "Example: {'action': {'type': 'string', 'enum': ['propose', 'vote'], 'description': 'Action to perform'}}"
         },
         "context": {
           "type": "object",
-          "description": "Initial context variable types",
+          "description": "Defines the types of initial context variables available to the flow.",
           "additionalProperties": {
-            "type": ["string", "number", "boolean", "object", "array"]
-          }
+            "type": "string",
+            "enum": ["string", "integer", "number", "boolean", "object", "array"],
+            "description": "The JSON type of the context variable."
+          },
+          "$comment": "Example: {'proposals': 'object', 'timestamp': 'integer'}"
         }
       },
       "additionalProperties": false
     },
     "context": {
       "type": "object",
-      "description": "Initial context values",
+      "description": "Initial values for context variables, validated against schema.context types at runtime.",
       "default": {},
-      "additionalProperties": true
+      "additionalProperties": true,
+      "$comment": "Example: {'proposals': {}, 'timestamp': 0}. Values must match types in schema.context."
     },
     "steps": {
       "type": "array",
-      "description": "Ordered list of operations in the program",
-      "items": { "$ref": "#/definitions/step" }
+      "description": "An ordered list of operations defining the flow's execution logic.",
+      "items": { "$ref": "#/definitions/step" },
+      "minItems": 1,
+      "$comment": "Example: [{'set': {'target': 'count', 'value': 0}}, {'return': {'get': 'count'}}]"
     }
   },
   "definitions": {
@@ -65,99 +75,131 @@
       "properties": {
         "let": {
           "type": "object",
-          "description": "Declare and bind computed values",
-          "additionalProperties": { "$ref": "#/definitions/expr" }
+          "description": "Declares and binds computed values to temporary variables within the step.",
+          "additionalProperties": { "$ref": "#/definitions/expr" },
+          "$comment": "Example: {'temp': {'add': [1, 2]}} binds temp to 3."
         },
         "set": {
           "type": "object",
-          "description": "Mutate context by setting a value",
+          "description": "Mutates a context variable by setting a value. For arrays, setting the root target appends the value.",
           "required": ["target", "value"],
           "properties": {
             "target": {
               "anyOf": [
-                { "type": "string" },
+                { "type": "string", "minLength": 1 },
                 {
                   "type": "array",
-                  "items": { "type": "string" }
+                  "items": { "type": "string", "minLength": 1 },
+                  "minItems": 1
                 }
-              ]
+              ],
+              "description": "The context variable or nested path to set (e.g., 'x' or ['obj', 'key'])."
             },
-            "value": { "$ref": "#/definitions/expr" }
+            "value": { "$ref": "#/definitions/expr", "description": "The value to assign, evaluated as an expression." }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'target': 'logs', 'value': {'event': 'Started'}} appends to logs array."
         },
         "assert": {
           "type": "object",
           "required": ["condition", "message"],
-          "description": "Ensure that a condition holds, else raise error",
+          "description": "Ensures a condition evaluates to true, raising an error with the specified message if false.",
           "properties": {
-            "condition": { "$ref": "#/definitions/expr" },
-            "message": { "type": "string" }
+            "condition": { "$ref": "#/definitions/expr", "description": "Expression that must evaluate to true." },
+            "message": { "type": "string", "minLength": 1, "description": "Error message if condition fails." }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'condition': {'compare': {'left': 5, 'op': '>', 'right': 0}}, 'message': 'Value too low'}"
         },
         "if": {
           "type": "object",
-          "description": "Conditional execution",
+          "description": "Executes steps conditionally based on an expression.",
           "required": ["condition", "then"],
           "properties": {
-            "condition": { "$ref": "#/definitions/expr" },
+            "condition": { "$ref": "#/definitions/expr", "description": "Expression determining branch execution." },
             "then": {
               "anyOf": [
                 { "$ref": "#/definitions/step" },
-                { "type": "array", "items": { "$ref": "#/definitions/step" } }
-              ]
+                { "type": "array", "items": { "$ref": "#/definitions/step" }, "minItems": 1 }
+              ],
+              "description": "Step(s) to execute if condition is true."
             },
             "else": {
               "anyOf": [
                 { "$ref": "#/definitions/step" },
-                { "type": "array", "items": { "$ref": "#/definitions/step" } }
-              ]
+                { "type": "array", "items": { "$ref": "#/definitions/step" }, "minItems": 1 }
+              ],
+              "description": "Step(s) to execute if condition is false."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'condition': {'get': 'flag'}, 'then': [{'set': {'target': 'x', 'value': 1}}], 'else': [{'set': {'target': 'x', 'value': 0}}]}"
         },
         "map": {
           "type": "object",
-          "description": "Apply a transformation to a list",
+          "description": "Transforms each element of an array, storing results in a new array.",
           "required": ["source", "as", "body", "target"],
           "properties": {
-            "source": { "type": "string" },
-            "as": { "type": "string" },
-            "body": { "type": "array", "items": { "$ref": "#/definitions/step" } },
-            "target": { "type": "string" }
+            "source": { "type": "string", "minLength": 1, "description": "Context variable containing the input array." },
+            "as": { "type": "string", "minLength": 1, "description": "Temporary variable name for each element." },
+            "body": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/step" },
+              "minItems": 1,
+              "description": "Steps to transform each element, using 'as' variable."
+            },
+            "target": { "type": "string", "minLength": 1, "description": "Context variable to store the resulting array." }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'source': 'numbers', 'as': 'n', 'body': [{'set': {'target': 'n', 'value': {'add': [{'get': 'n'}, 1]}}}], 'target': 'incremented'}"
         },
         "forEach": {
           "type": "object",
-          "description": "Execute steps for each element in an array",
+          "description": "Executes steps for each element in an array without collecting results.",
           "required": ["source", "as", "body"],
           "properties": {
-            "source": { "type": "string" },
-            "as": { "type": "string" },
-            "body": { "type": "array", "items": { "$ref": "#/definitions/step" } }
+            "source": { "type": "string", "minLength": 1, "description": "Context variable containing the input array." },
+            "as": { "type": "string", "minLength": 1, "description": "Temporary variable name for each element." },
+            "body": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/step" },
+              "minItems": 1,
+              "description": "Steps to execute for each element, using 'as' variable."
+            }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'source': 'logs', 'as': 'log', 'body': [{'log': {'level': 'info', 'message': [{'get': 'log'}]}}]}"
         },
         "try": {
           "type": "object",
-          "description": "Attempt a sequence of steps and optionally catch errors",
+          "description": "Attempts a sequence of steps, catching errors in an optional catch block.",
           "required": ["body"],
           "properties": {
-            "body": { "type": "array", "items": { "$ref": "#/definitions/step" } },
-            "catch": { "type": "array", "items": { "$ref": "#/definitions/step" } }
+            "body": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/step" },
+              "minItems": 1,
+              "description": "Steps to attempt execution."
+            },
+            "catch": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/step" },
+              "minItems": 1,
+              "description": "Steps to execute if an error occurs, with 'error' variable available."
+            }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'body': [{'assert': {'condition': false, 'message': 'Fail'}}], 'catch': [{'log': {'level': 'error', 'message': [{'get': 'error'}]}}]}"
         },
         "log": {
           "type": "object",
           "required": ["level", "message"],
-          "description": "Log a message",
+          "description": "Logs a message to the runtime's logging system for debugging or auditing.",
           "properties": {
             "level": {
               "type": "string",
-              "enum": ["debug", "info", "warn", "error"]
+              "enum": ["debug", "info", "warn", "error"],
+              "description": "Severity level of the log message."
             },
             "message": {
               "type": "array",
@@ -166,114 +208,184 @@
                   { "type": "string" },
                   { "$ref": "#/definitions/expr" }
                 ]
-              }
+              },
+              "minItems": 1,
+              "description": "Message components, combining literals and evaluated expressions."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'level': 'info', 'message': ['Count: ', {'get': 'count'}]}"
         },
         "print": {
           "type": "object",
-          "description": "Print values to stdout",
+          "description": "Outputs values to stdout for debugging or user interaction.",
           "required": ["values"],
           "properties": {
             "values": {
               "type": "array",
               "items": {
-                "anyOf": [{ "type": "string" }, { "$ref": "#/definitions/expr" }]
-              }
+                "anyOf": [
+                  { "type": "string" },
+                  { "$ref": "#/definitions/expr" }
+                ]
+              },
+              "minItems": 1,
+              "description": "Values to print, combining literals and evaluated expressions."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'values': ['Result: ', {'get': 'result'}]}"
         },
         "return": {
           "type": "object",
           "required": ["get"],
-          "description": "Return a value from the flow",
+          "description": "Terminates the flow and returns a value.",
           "properties": {
             "get": {
               "anyOf": [
-                { "type": "string" },
+                { "type": "string", "minLength": 1 },
                 {
                   "type": "array",
-                  "items": { "type": "string" }
+                  "items": { "type": "string", "minLength": 1 },
+                  "minItems": 1
                 }
-              ]
+              ],
+              "description": "Context variable or path to return."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$comment": "Example: {'get': 'result'}"
+        },
+        "call": {
+          "type": "object",
+          "description": "Invokes an external function or API, binding the result to a context variable.",
+          "required": ["function", "args", "target"],
+          "properties": {
+            "function": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Name or identifier of the external function or API endpoint."
+            },
+            "args": {
+              "type": "object",
+              "description": "Arguments to pass to the function, with keys mapping to parameter names.",
+              "additionalProperties": { "$ref": "#/definitions/expr" }
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Context variable to store the function’s result."
+            }
+          },
+          "additionalProperties": false,
+          "$comment": "Example: {'function': 'fetchData', 'args': {'url': {'value': 'https://api.example.com'}}, 'target': 'data'}"
         }
       }
     },
     "expr": {
       "type": "object",
-      "description": "Expression node that evaluates to a value",
+      "description": "An expression that evaluates to a value, supporting literals, variables, arithmetic, and logical operations. Operations are evaluated left-to-right with precedence: not > and > or > compare > arithmetic.",
       "properties": {
-        "get": { "type": "string" },
-        "value": { "type": ["string", "number", "boolean", "object", "array"] },
+        "get": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Retrieves a value from a context variable. The variable must exist."
+        },
+        "value": {
+          "type": ["string", "number", "boolean", "object", "array"],
+          "description": "A literal value."
+        },
         "add": {
           "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" }
+          "items": { "$ref": "#/definitions/valueOrExpr" },
+          "minItems": 2,
+          "description": "Sums numeric values."
         },
         "subtract": {
           "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" }
+          "items": { "$ref": "#/definitions/valueOrExpr" },
+          "minItems": 2,
+          "description": "Subtracts numeric values (left-to-right)."
         },
         "multiply": {
           "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" }
+          "items": { "$ref": "#/definitions/valueOrExpr" },
+          "minItems": 2,
+          "description": "Multiplies numeric values."
         },
         "divide": {
           "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" }
+          "items": { "$ref": "#/definitions/valueOrExpr" },
+          "minItems": 2,
+          "description": "Divides numeric values (left-to-right)."
         },
         "mod": {
           "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" }
+          "items": { "$ref": "#/definitions/valueOrExpr" },
+          "minItems": 2,
+          "description": "Computes modulus of numeric values."
         },
         "abs": {
           "type": "object",
           "properties": {
             "value": { "$ref": "#/definitions/valueOrExpr" }
           },
-          "additionalProperties": false
+          "required": ["value"],
+          "additionalProperties": false,
+          "description": "Computes the absolute value of a number."
         },
         "compare": {
           "type": "object",
           "required": ["left", "op", "right"],
           "properties": {
-            "left": { "$ref": "#/definitions/valueOrExpr" },
+            "left": { "$ref": "#/definitions/valueOrExpr", "description": "Left operand." },
             "op": {
               "type": "string",
-              "enum": ["<", ">", "==", "<=", ">=", "!="]
+              "enum": ["<", ">", "===", "<=", ">=", "!=="],
+              "description": "Comparison operator (=== for strict equality, !== for strict inequality)."
             },
-            "right": { "$ref": "#/definitions/valueOrExpr" }
+            "right": { "$ref": "#/definitions/valueOrExpr", "description": "Right operand." }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "description": "Compares two values, returning a boolean."
         },
-        "not": { "$ref": "#/definitions/expr" },
+        "not": {
+          "$ref": "#/definitions/expr",
+          "description": "Negates a boolean expression."
+        },
         "and": {
           "type": "array",
-          "items": { "$ref": "#/definitions/expr" }
+          "items": { "$ref": "#/definitions/expr" },
+          "minItems": 2,
+          "description": "Evaluates to true if all expressions are true."
         },
         "or": {
           "type": "array",
-          "items": { "$ref": "#/definitions/expr" }
+          "items": { "$ref": "#/definitions/expr" },
+          "minItems": 2,
+          "description": "Evaluates to true if any expression is true."
         },
         "length": {
           "type": "string",
-          "description": "Resolve length of a list or string"
+          "minLength": 1,
+          "description": "Returns the length of a string or array in the context."
         },
         "in": {
           "type": "object",
           "required": ["item", "array"],
           "properties": {
-            "item": { "$ref": "#/definitions/valueOrExpr" },
-            "array": { "$ref": "#/definitions/valueOrExpr" }
+            "item": { "$ref": "#/definitions/valueOrExpr", "description": "Value to check for membership." },
+            "array": {
+              "$ref": "#/definitions/expr",
+              "description": "Expression that must evaluate to an array."
+            }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "description": "Checks if an item is in an array, returning a boolean."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "$comment": "Example: {'add': [{'get': 'x'}, 1]} evaluates to x + 1."
     },
     "valueOrExpr": {
       "anyOf": [
@@ -281,7 +393,19 @@
         { "type": "number" },
         { "type": "boolean" },
         { "$ref": "#/definitions/expr" }
-      ]
+      ],
+      "description": "A literal value or an expression to evaluate."
+    },
+    "error": {
+      "type": "object",
+      "required": ["message", "step"],
+      "properties": {
+        "message": { "type": "string", "description": "The error message." },
+        "step": { "type": "integer", "description": "Index of the step that failed." },
+        "details": { "type": "object", "description": "Additional error metadata." }
+      },
+      "additionalProperties": false,
+      "description": "Structure of errors caught in try.catch blocks."
     }
   },
   "additionalProperties": false
