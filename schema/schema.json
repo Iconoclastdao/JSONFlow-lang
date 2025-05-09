@@ -1,412 +1,835 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "JSONFlow Program Schema",
+  "title": "JSONFlow Ultimate Workflow Schema",
+  "description": "A groundbreaking DSL for defining workflows with blockchain, AI, quantum, and UI integration, designed for accessibility and production readiness.",
   "type": "object",
   "required": ["function", "schema", "steps"],
   "properties": {
     "function": {
       "type": "string",
-      "description": "The unique name of this function or workflow, used to identify the flow in execution contexts.",
+      "description": "Unique identifier for the workflow, matching Solidity function naming conventions.",
       "minLength": 1,
-      "$comment": "Example: 'LightProtocol'"
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "type": "string", "description": "Version of the JSONFlow schema (e.g., '1.1.0')." },
+        "version": { "type": "string", "description": "Workflow version." },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "mermaid": { "type": "string", "description": "Mermaid diagram for workflow visualization." },
+        "target_languages": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["solidity", "cairo", "rust", "python", "javascript", "go", "typescript", "java", "kotlin"] },
+          "description": "Supported output languages for code generation."
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "version": { "type": "string" },
+              "hash": { "type": "string" }
+            },
+            "required": ["version"],
+            "additionalProperties": false
+          },
+          "description": "External libraries or dependencies with version and hash for integrity."
+        }
+      },
+      "required": ["schema_version"],
+      "additionalProperties": false,
+      "description": "Metadata with restricted keys for security."
+    },
+    "ui": {
+      "$ref": "#/$defs/ui",
+      "description": "React-specific UI configuration for the entire workflow."
+    },
+    "access_policy": {
+      "type": "object",
+      "properties": {
+        "roles": { "type": "array", "items": { "type": "string" }, "description": "Roles allowed to execute the workflow." },
+        "permissions": { "type": "array", "items": { "type": "string" }, "description": "Permissions required for execution." }
+      },
+      "description": "Workflow-level access control policy."
     },
     "schema": {
       "type": "object",
-      "required": ["inputs", "context"],
+      "required": ["inputs", "context", "outputs"],
       "properties": {
         "inputs": {
           "type": "object",
-          "description": "Defines the input parameters required to execute the flow, with type constraints and validation rules.",
           "additionalProperties": {
             "type": "object",
             "required": ["type"],
             "properties": {
-              "type": {
-                "type": "string",
-                "enum": ["string", "integer", "number", "boolean", "object", "array"],
-                "description": "The JSON type of the input ('integer' for whole numbers, 'number' for floating-point)."
+              "type": { "type": "string", "enum": ["string", "integer", "number", "boolean", "object", "array", "null"] },
+              "default": { "anyOf": [{ "type": "string" }, { "type": "integer" }, { "type": "number" }, { "type": "boolean" }, { "type": "object" }, { "type": "array" }, { "type": "null" }] },
+              "description": { "type": "string" },
+              "nl_noun": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "object", "additionalProperties": { "type": "string" } }
+                ],
+                "description": "Natural language noun (e.g., 'User'). Supports localization."
               },
-              "minimum": { "type": "number", "description": "Inclusive minimum value for numbers." },
-              "maximum": { "type": "number", "description": "Inclusive maximum value for numbers." },
-              "exclusiveMinimum": { "type": "number", "description": "Exclusive minimum value for numbers." },
-              "exclusiveMaximum": { "type": "number", "description": "Exclusive maximum value for numbers." },
-              "minLength": { "type": "integer", "minimum": 0, "description": "Minimum length for strings or arrays." },
-              "maxLength": { "type": "integer", "minimum": 0, "description": "Maximum length for strings or arrays." },
-              "enum": { "type": "array", "items": {}, "description": "Allowed values for the input." },
-              "description": { "type": "string", "description": "A human-readable description of the input's purpose." }
+              "nl_description": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "object", "additionalProperties": { "type": "string" } }
+                ],
+                "description": "Natural language explanation. Supports localization."
+              },
+              "constraints": {
+                "type": "object",
+                "properties": {
+                  "minLength": { "type": "integer" },
+                  "maxLength": { "type": "integer" },
+                  "pattern": { "type": "string" },
+                  "minimum": { "type": "number" },
+                  "maximum": { "type": "number" },
+                  "enum": { "type": "array", "items": { "type": ["string", "number", "boolean"] } }
+                }
+              },
+              "ui": {
+                "$ref": "#/$defs/ui",
+                "description": "React-specific UI configuration for this input."
+              }
             },
             "additionalProperties": false
-          },
-          "$comment": "Example: {'action': {'type': 'string', 'enum': ['propose', 'vote'], 'description': 'Action to perform'}}"
+          }
         },
         "context": {
           "type": "object",
-          "description": "Defines the types of initial context variables available to the flow.",
           "additionalProperties": {
-            "type": "string",
-            "enum": ["string", "integer", "number", "boolean", "object", "array"],
-            "description": "The JSON type of the context variable."
-          },
-          "$comment": "Example: {'proposals': 'object', 'timestamp': 'integer'}"
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": { "type": "string", "enum": ["string", "integer", "number", "boolean", "object", "array", "null"] },
+              "nl_noun": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "object", "additionalProperties": { "type": "string" } }
+                ]
+              },
+              "nl_description": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "object", "additionalProperties": { "type": "string" } }
+                ]
+              },
+              "source": { "type": "string", "enum": ["env", "config", "blockchain", "external_api"] }
+            },
+            "additionalProperties": false
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": { "type": "string", "enum": ["string", "integer", "number", "boolean", "object", "array", "null"] },
+              "description": { "type": "string" },
+              "nl_noun": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "object", "additionalProperties": { "type": "string" } }
+                ]
+              },
+              "nl_description": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "object", "additionalProperties": { "type": "string" } }
+                ]
+              },
+              "ui": {
+                "$ref": "#/$defs/ui",
+                "description": "React-specific UI configuration for this output."
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
     },
     "context": {
       "type": "object",
-      "description": "Initial values for context variables, validated against schema.context types at runtime.",
       "default": {},
-      "additionalProperties": true,
-      "$comment": "Example: {'proposals': {}, 'timestamp': 0}. Values must match types in schema.context."
+      "additionalProperties": false,
+      "description": "Runtime context data, restricted for security."
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["condition", "message"],
+        "properties": {
+          "condition": { "$ref": "#/$defs/expr" },
+          "message": { "type": "string" },
+          "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+          "verification_tool": { "type": "string", "enum": ["certora", "scribble"], "description": "Tool for formal verification." }
+        }
+      },
+      "description": "Workflow-level invariants for formal verification, with tool integration."
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["example", "property", "fuzz"], "description": "Test type: example-based, property-based, or fuzz testing." },
+          "inputs": { "type": "object", "description": "Input values for the test." },
+          "expected": { "type": "object", "description": "Expected output values." },
+          "context": { "type": "object", "description": "Context for the test." },
+          "description": { "type": "string" },
+          "properties": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/expr" },
+            "description": "Properties to verify for property-based or fuzz testing."
+          }
+        }
+      },
+      "description": "Test cases for example-based, property-based, or fuzz testing."
     },
     "steps": {
       "type": "array",
-      "description": "An ordered list of operations defining the flow's execution logic.",
-      "items": { "$ref": "#/definitions/step" },
-      "minItems": 1,
-      "$comment": "Example: [{'set': {'target': 'count', 'value': 0}}, {'return': {'get': 'count'}}]"
+      "items": { "$ref": "#/$defs/step" },
+      "minItems": 1
+    },
+    "attestation": {
+      "type": "object",
+      "properties": {
+        "signers": { "type": "array", "items": { "type": "string" } },
+        "signature": { "type": "string" },
+        "hash": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "description": "Workflow attestation for authenticity and integrity."
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "author": { "type": "string" },
+          "change_summary": { "type": "string" },
+          "diff": { "type": "string" }
+        },
+        "required": ["timestamp", "author", "change_summary"],
+        "additionalProperties": false
+      },
+      "description": "Audit trail of workflow revisions."
+    },
+    "execution_policy": {
+      "type": "object",
+      "properties": {
+        "max_runs_per_minute": { "type": "integer", "minimum": 1 },
+        "max_concurrent_runs": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false,
+      "description": "Rate limiting and execution policies."
+    },
+    "secrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "source": { "type": "string", "enum": ["env", "vault", "other"] }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "description": "References to secrets used in the workflow."
+    },
+    "subworkflows": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of subworkflow IDs or URIs."
+    },
+    "verification_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "result": { "type": "string", "enum": ["success", "failure", "partial"] },
+          "properties_verified": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["tool", "date", "result"],
+        "additionalProperties": false
+      },
+      "description": "Results of formal verification."
+    },
+    "resource_estimates": {
+      "type": "object",
+      "additionalProperties": { "type": "number" },
+      "description": "Estimated resource usage for the workflow."
     }
   },
-  "definitions": {
-    "step": {
+  "additionalProperties": false,
+  "$defs": {
+    "ui": {
       "type": "object",
-      "minProperties": 1,
-      "additionalProperties": false,
       "properties": {
-        "let": {
+        "component": { "type": "string", "description": "React component name (e.g., 'TextField', 'Button')." },
+        "props": { "type": "object", "additionalProperties": true, "description": "Props for the React component." },
+        "css": {
           "type": "object",
-          "description": "Declares and binds computed values to temporary variables within the step.",
-          "additionalProperties": { "$ref": "#/definitions/expr" },
-          "$comment": "Example: {'temp': {'add': [1, 2]}} binds temp to 3."
-        },
-        "set": {
-          "type": "object",
-          "description": "Mutates a context variable by setting a value. For arrays, setting the root target appends the value.",
-          "required": ["target", "value"],
           "properties": {
-            "target": {
-              "anyOf": [
-                { "type": "string", "minLength": 1 },
-                {
-                  "type": "array",
-                  "items": { "type": "string", "minLength": 1 },
-                  "minItems": 1
-                }
-              ],
-              "description": "The context variable or nested path to set (e.g., 'x' or ['obj', 'key'])."
-            },
-            "value": { "$ref": "#/definitions/expr", "description": "The value to assign, evaluated as an expression." }
+            "className": { "type": "string", "description": "CSS class name for styling." },
+            "style": { "type": "object", "additionalProperties": true, "description": "Inline CSS styles." }
           },
-          "additionalProperties": false,
-          "$comment": "Example: {'target': 'logs', 'value': {'event': 'Started'}} appends to logs array."
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true,
+      "description": "React-specific UI configuration."
+    },
+    "common_step_properties": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the step." },
+        "on_error": { "$ref": "#/$defs/on_error" },
+        "nl_phrase": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object", "additionalProperties": { "type": "string" } }
+          ],
+          "description": "Natural language description of the step. Supports localization."
         },
-        "assert": {
+        "access_control": {
           "type": "object",
-          "required": ["condition", "message"],
-          "description": "Ensures a condition evaluates to true, raising an error with the specified message if false.",
           "properties": {
-            "condition": { "$ref": "#/definitions/expr", "description": "Expression that must evaluate to true." },
-            "message": { "type": "string", "minLength": 1, "description": "Error message if condition fails." }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'condition': {'compare': {'left': 5, 'op': '>', 'right': 0}}, 'message': 'Value too low'}"
+            "roles": { "type": "array", "items": { "type": "string" } },
+            "permissions": { "type": "array", "items": { "type": "string" } }
+          }
         },
-        "if": {
+        "timeout": {
           "type": "object",
-          "description": "Executes steps conditionally based on an expression.",
-          "required": ["condition", "then"],
           "properties": {
-            "condition": { "$ref": "#/definitions/expr", "description": "Expression determining branch execution." },
-            "then": {
-              "anyOf": [
-                { "$ref": "#/definitions/step" },
-                { "type": "array", "items": { "$ref": "#/definitions/step" }, "minItems": 1 }
-              ],
-              "description": "Step(s) to execute if condition is true."
-            },
-            "else": {
-              "anyOf": [
-                { "$ref": "#/definitions/step" },
-                { "type": "array", "items": { "$ref": "#/definitions/step" }, "minItems": 1 }
-              ],
-              "description": "Step(s) to execute if condition is false."
-            }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'condition': {'get': 'flag'}, 'then': [{'set': {'target': 'x', 'value': 1}}], 'else': [{'set': {'target': 'x', 'value': 0}}]}"
+            "duration": { "type": "string", "description": "Duration (e.g., '30s', '1m')." },
+            "action": { "type": "string", "enum": ["skip", "retry", "fail"] },
+            "max_retries": { "type": "integer", "minimum": 0 }
+          }
         },
-        "map": {
+        "ui": { "$ref": "#/$defs/ui" },
+        "resource_estimates": {
           "type": "object",
-          "description": "Transforms each element of an array, storing results in a new array.",
-          "required": ["source", "as", "body", "target"],
-          "properties": {
-            "source": { "type": "string", "minLength": 1, "description": "Context variable containing the input array." },
-            "as": { "type": "string", "minLength": 1, "description": "Temporary variable name for each element." },
-            "body": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/step" },
-              "minItems": 1,
-              "description": "Steps to transform each element, using 'as' variable."
-            },
-            "target": { "type": "string", "minLength": 1, "description": "Context variable to store the resulting array." }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'source': 'numbers', 'as': 'n', 'body': [{'set': {'target': 'n', 'value': {'add': [{'get': 'n'}, 1]}}}], 'target': 'incremented'}"
-        },
-        "forEach": {
-          "type": "object",
-          "description": "Executes steps for each element in an array without collecting results.",
-          "required": ["source", "as", "body"],
-          "properties": {
-            "source": { "type": "string", "minLength": 1, "description": "Context variable containing the input array." },
-            "as": { "type": "string", "minLength": 1, "description": "Temporary variable name for each element." },
-            "body": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/step" },
-              "minItems": 1,
-              "description": "Steps to execute for each element, using 'as' variable."
-            }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'source': 'logs', 'as': 'log', 'body': [{'log': {'level': 'info', 'message': [{'get': 'log'}]}}]}"
-        },
-        "try": {
-          "type": "object",
-          "description": "Attempts a sequence of steps, catching errors in an optional catch block.",
-          "required": ["body"],
-          "properties": {
-            "body": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/step" },
-              "minItems": 1,
-              "description": "Steps to attempt execution."
-            },
-            "catch": {
-              "type": "array",
-              "items": { "$ref": "#/definitions/step" },
-              "minItems": 1,
-              "description": "Steps to execute if an error occurs, with 'error' variable available."
-            }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'body': [{'assert': {'condition': false, 'message': 'Fail'}}], 'catch': [{'log': {'level': 'error', 'message': [{'get': 'error'}]}}]}"
-        },
-        "log": {
-          "type": "object",
-          "required": ["level", "message"],
-          "description": "Logs a message to the runtime's logging system for debugging or auditing.",
-          "properties": {
-            "level": {
-              "type": "string",
-              "enum": ["debug", "info", "warn", "error"],
-              "description": "Severity level of the log message."
-            },
-            "message": {
-              "type": "array",
-              "items": {
-                "anyOf": [
-                  { "type": "string" },
-                  { "$ref": "#/definitions/expr" }
-                ]
-              },
-              "minItems": 1,
-              "description": "Message components, combining literals and evaluated expressions."
-            }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'level': 'info', 'message': ['Count: ', {'get': 'count'}]}"
-        },
-        "print": {
-          "type": "object",
-          "description": "Outputs values to stdout for debugging or user interaction.",
-          "required": ["values"],
-          "properties": {
-            "values": {
-              "type": "array",
-              "items": {
-                "anyOf": [
-                  { "type": "string" },
-                  { "$ref": "#/definitions/expr" }
-                ]
-              },
-              "minItems": 1,
-              "description": "Values to print, combining literals and evaluated expressions."
-            }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'values': ['Result: ', {'get': 'result'}]}"
-        },
-        "return": {
-          "type": "object",
-          "required": ["get"],
-          "description": "Terminates the flow and returns a value.",
-          "properties": {
-            "get": {
-              "anyOf": [
-                { "type": "string", "minLength": 1 },
-                {
-                  "type": "array",
-                  "items": { "type": "string", "minLength": 1 },
-                  "minItems": 1
-                }
-              ],
-              "description": "Context variable or path to return."
-            }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'get': 'result'}"
-        },
-        "call": {
-          "type": "object",
-          "description": "Invokes an external function or API, binding the result to a context variable.",
-          "required": ["function", "args", "target"],
-          "properties": {
-            "function": {
-              "type": "string",
-              "minLength": 1,
-              "description": "Name or identifier of the external function or API endpoint."
-            },
-            "args": {
-              "type": "object",
-              "description": "Arguments to pass to the function, with keys mapping to parameter names.",
-              "additionalProperties": { "$ref": "#/definitions/expr" }
-            },
-            "target": {
-              "type": "string",
-              "minLength": 1,
-              "description": "Context variable to store the function’s result."
-            }
-          },
-          "additionalProperties": false,
-          "$comment": "Example: {'function': 'fetchData', 'args': {'url': {'value': 'https://api.example.com'}}, 'target': 'data'}"
+          "additionalProperties": { "type": "number" },
+          "description": "Estimated resource usage for this step."
         }
       }
     },
+    "step": {
+      "oneOf": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "set" },
+                "target": { "type": "string" },
+                "value": { "$ref": "#/$defs/expr" }
+              },
+              "required": ["type", "target", "value"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "if" },
+                "condition": { "$ref": "#/$defs/expr" },
+                "then": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 },
+                "else": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }
+              },
+              "required": ["type", "condition", "then"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "return" },
+                "value": { "$ref": "#/$defs/expr" }
+              },
+              "required": ["type", "value"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "call" },
+                "function": { "type": "string" },
+                "args": { "type": "object", "additionalProperties": { "$ref": "#/$defs/expr" } },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "function", "args", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "try" },
+                "body": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 },
+                "catch": {
+                  "type": "object",
+                  "properties": {
+                    "error_var": { "type": "string" },
+                    "body": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }
+                  }
+                },
+                "finally": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }
+              },
+              "required": ["type", "body"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "while" },
+                "condition": { "$ref": "#/$defs/expr" },
+                "body": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }
+              },
+              "required": ["type", "condition", "body"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "foreach" },
+                "collection": { "$ref": "#/$defs/expr" },
+                "iterator": { "type": "string" },
+                "body": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }
+              },
+              "required": ["type", "collection", "iterator", "body"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "parallel" },
+                "branches": { "type": "array", "items": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }, "minItems": 1 }
+              },
+              "required": ["type", "branches"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "assert" },
+                "condition": { "$ref": "#/$defs/expr" },
+                "message": { "type": "string" }
+              },
+              "required": ["type", "condition"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "event" },
+                "name": { "type": "string" },
+                "params": { "type": "object", "additionalProperties": { "$ref": "#/$defs/expr" } }
+              },
+              "required": ["type", "name", "params"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "require_role" },
+                "role": { "type": "string" }
+              },
+              "required": ["type", "role"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "ai_infer" },
+                "model": { "type": "string" },
+                "input": { "$ref": "#/$defs/expr" },
+                "parameters": { "type": "object", "additionalProperties": true },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "model", "input", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "ai_train" },
+                "model": { "type": "string" },
+                "data": { "$ref": "#/$defs/expr" },
+                "parameters": { "type": "object", "additionalProperties": true },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "model", "data", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "ai_classify" },
+                "model": { "type": "string" },
+                "input": { "$ref": "#/$defs/expr" },
+                "parameters": { "type": "object", "additionalProperties": true },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "model", "input", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "ai_embed" },
+                "model": { "type": "string" },
+                "input": { "$ref": "#/$defs/expr" },
+                "parameters": { "type": "object", "additionalProperties": true },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "model", "input", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "ai_explain" },
+                "model": { "type": "string" },
+                "input": { "$ref": "#/$defs/expr" },
+                "parameters": { "type": "object", "additionalProperties": true },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "model", "input", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "quantum_circuit" },
+                "gates": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["gate", "target"],
+                    "properties": {
+                      "gate": { "type": "string", "enum": ["H", "X", "Y", "Z", "CNOT", "T", "S", "RX", "RY", "RZ"] },
+                      "target": { "type": "integer", "minimum": 0 },
+                      "control": { "type": "integer", "minimum": 0 },
+                      "parameters": { "type": "object", "additionalProperties": { "type": "number" } }
+                    },
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                },
+                "qubits": { "type": "integer", "minimum": 1 },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "gates", "qubits", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "quantum_measure" },
+                "circuit": { "$ref": "#/$defs/expr" },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "circuit", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "quantum_algorithm" },
+                "algorithm": { "type": "string", "enum": ["grover", "shor", "qft"] },
+                "parameters": { "type": "object", "additionalProperties": true },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "algorithm", "parameters", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "blockchain_operation" },
+                "chain": {
+                  "anyOf": [
+                    { "type": "string", "enum": ["ethereum", "solana", "starknet", "cosmos", "polkadot"] },
+                    { "type": "string", "pattern": "^[a-zA-Z0-9_]+$" }
+                  ]
+                },
+                "action": {
+                  "anyOf": [
+                    { "type": "string", "enum": ["transfer", "mint", "burn", "governance", "bridge", "flash_loan", "swap", "liquidate"] },
+                    { "type": "string", "pattern": "^[a-zA-Z0-9_]+$" }
+                  ]
+                },
+                "params": { "type": "object", "additionalProperties": true },
+                "gas": {
+                  "type": "object",
+                  "properties": {
+                    "estimate": { "type": "boolean" },
+                    "optimize": { "type": "boolean" },
+                    "limit": { "type": "integer" },
+                    "max_fee_per_gas": { "type": "integer" },
+                    "priority_fee_per_gas": { "type": "integer" }
+                  }
+                },
+                "replay_protection": {
+                  "type": "object",
+                  "properties": {
+                    "nonce": { "type": "string" },
+                    "idempotency_key": { "type": "string" }
+                  }
+                },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "chain", "action", "params", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "crypto_sign" },
+                "algorithm": { "type": "string", "enum": ["ecdsa", "ed25519", "rsa"] },
+                "data": { "$ref": "#/$defs/expr" },
+                "key": { "$ref": "#/$defs/expr" },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "algorithm", "data", "key", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "crypto_verify" },
+                "algorithm": { "type": "string", "enum": ["ecdsa", "ed25519", "rsa"] },
+                "data": { "$ref": "#/$defs/expr" },
+                "signature": { "$ref": "#/$defs/expr" },
+                "key": { "$ref": "#/$defs/expr" },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "algorithm", "data", "signature", "key", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "regex_match" },
+                "pattern": { "type": "string" },
+                "input": { "$ref": "#/$defs/expr" },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "pattern", "input", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "audit_log" },
+                "message": { "type": "string" },
+                "metadata": { "type": "object", "additionalProperties": true }
+              },
+              "required": ["type", "message"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "const": "call_workflow" },
+                "workflow": { "type": "string" },
+                "args": { "type": "object", "additionalProperties": { "$ref": "#/$defs/expr" } },
+                "target": { "type": "string" }
+              },
+              "required": ["type", "workflow", "args", "target"]
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/common_step_properties" },
+            {
+              "properties": {
+                "type": { "type": "string", "pattern": "^custom_[a-zA-Z0-9_]+$" },
+                "custom_properties": { "type": "object" }
+              },
+              "required": ["type", "custom_properties"]
+            }
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
     "expr": {
       "type": "object",
-      "description": "An expression that evaluates to a value, supporting literals, variables, arithmetic, and logical operations. Operations are evaluated left-to-right with precedence: not > and > or > compare > arithmetic.",
       "properties": {
-        "get": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Retrieves a value from a context variable. The variable must exist."
-        },
-        "value": {
-          "type": ["string", "number", "boolean", "object", "array"],
-          "description": "A literal value."
-        },
-        "add": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" },
-          "minItems": 2,
-          "description": "Sums numeric values."
-        },
-        "subtract": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" },
-          "minItems": 2,
-          "description": "Subtracts numeric values (left-to-right)."
-        },
-        "multiply": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" },
-          "minItems": 2,
-          "description": "Multiplies numeric values."
-        },
-        "divide": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" },
-          "minItems": 2,
-          "description": "Divides numeric values (left-to-right)."
-        },
-        "mod": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/valueOrExpr" },
-          "minItems": 2,
-          "description": "Computes modulus of numeric values."
-        },
-        "abs": {
-          "type": "object",
-          "properties": {
-            "value": { "$ref": "#/definitions/valueOrExpr" }
-          },
-          "required": ["value"],
-          "additionalProperties": false,
-          "description": "Computes the absolute value of a number."
-        },
+        "get": { "type": "string", "pattern": "^[a-zA-Z0-9_\\.]+$", "description": "Variable name, restricted to safe characters." },
+        "value": { "type": ["string", "number", "boolean", "object", "array", "null"] },
+        "add": { "type": "array", "items": { "$ref": "#/$defs/valueOrExpr" }, "minItems": 2 },
+        "subtract": { "type": "array", "items": { "$ref": "#/$defs/valueOrExpr" }, "minItems": 2 },
+        "multiply": { "type": "array", "items": { "$ref": "#/$defs/valueOrExpr" }, "minItems": 2 },
+        "divide": { "type": "array", "items": { "$ref": "#/$defs/valueOrExpr" }, "minItems": 2 },
         "compare": {
           "type": "object",
           "required": ["left", "op", "right"],
           "properties": {
-            "left": { "$ref": "#/definitions/valueOrExpr", "description": "Left operand." },
-            "op": {
-              "type": "string",
-              "enum": ["<", ">", "===", "<=", ">=", "!=="],
-              "description": "Comparison operator (=== for strict equality, !== for strict inequality)."
-            },
-            "right": { "$ref": "#/definitions/valueOrExpr", "description": "Right operand." }
+            "left": { "$ref": "#/$defs/valueOrExpr" },
+            "op": { "type": "string", "enum": ["<", ">", "===", "<=", ">=", "!=="] },
+            "right": { "$ref": "#/$defs/valueOrExpr" }
           },
-          "additionalProperties": false,
-          "description": "Compares two values, returning a boolean."
+          "additionalProperties": false
         },
-        "not": {
-          "$ref": "#/definitions/expr",
-          "description": "Negates a boolean expression."
-        },
-        "and": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/expr" },
-          "minItems": 2,
-          "description": "Evaluates to true if all expressions are true."
-        },
-        "or": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/expr" },
-          "minItems": 2,
-          "description": "Evaluates to true if any expression is true."
-        },
-        "length": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Returns the length of a string or array in the context."
-        },
-        "in": {
+        "not": { "$ref": "#/$defs/expr" },
+        "and": { "type": "array", "items": { "$ref": "#/$defs/expr" }, "minItems": 2 },
+        "or": { "type": "array", "items": { "$ref": "#/$defs/expr" }, "minItems": 2 },
+        "concat": { "type": "array", "items": { "$ref": "#/$defs/valueOrExpr" }, "minItems": 2 },
+        "hash": {
           "type": "object",
-          "required": ["item", "array"],
+          "required": ["algorithm", "input"],
           "properties": {
-            "item": { "$ref": "#/definitions/valueOrExpr", "description": "Value to check for membership." },
-            "array": {
-              "$ref": "#/definitions/expr",
-              "description": "Expression that must evaluate to an array."
-            }
+            "algorithm": { "type": "string", "enum": ["sha256", "sha3", "keccak256"] },
+            "input": { "$ref": "#/$defs/valueOrExpr" }
           },
-          "additionalProperties": false,
-          "description": "Checks if an item is in an array, returning a boolean."
+          "additionalProperties": false
+        },
+        "regex": {
+          "type": "object",
+          "required": ["pattern", "input"],
+          "properties": {
+            "pattern": { "type": "string" },
+            "input": { "$ref": "#/$defs/valueOrExpr" }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
-      "$comment": "Example: {'add': [{'get': 'x'}, 1]} evaluates to x + 1."
+      "description": "Expression with validation to prevent injection."
     },
     "valueOrExpr": {
       "anyOf": [
         { "type": "string" },
         { "type": "number" },
         { "type": "boolean" },
-        { "$ref": "#/definitions/expr" }
-      ],
-      "description": "A literal value or an expression to evaluate."
+        { "type": "object" },
+        { "type": "array" },
+        { "type": "null" },
+        { "$ref": "#/$defs/expr" }
+      ]
     },
-    "error": {
+    "on_error": {
       "type": "object",
-      "required": ["message", "step"],
       "properties": {
-        "message": { "type": "string", "description": "The error message." },
-        "step": { "type": "integer", "description": "Index of the step that failed." },
-        "details": { "type": "object", "description": "Additional error metadata." }
+        "step_id": { "type": "string", "description": "ID of step to execute on error, validated to prevent cycles." },
+        "body": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }
       },
-      "additionalProperties": false,
-      "description": "Structure of errors caught in try.catch blocks."
+      "description": "Error handling with cycle prevention."
     }
-  },
-  "additionalProperties": false
+  }
 }
