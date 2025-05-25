@@ -1,0 +1,221 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/exchange/exchange.schema.json",
+  "title": "Sovereign Exchange Schema",
+  "description": "Comprehensive schema for exchange module operations in the Sovereign DApp system, covering compliance events, audit logs, and metadata for decentralized interactions.",
+  "type": "object",
+  "properties": {
+    "exchange": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "description": "Array of compliance events logged for DApp operations.",
+          "items": {
+            "type": "object",
+            "required": ["id", "eventType", "userId", "payload", "createdAt", "context"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the event."
+              },
+              "eventType": {
+                "type": "string",
+                "enum": [
+                  "post_published",
+                  "comment_added",
+                  "reaction_added",
+                  "post_updated",
+                  "market_created",
+                  "offer_created",
+                  "offer_verified",
+                  "offer_purchased",
+                  "user_registered",
+                  "profile_updated",
+                  "data_submitted",
+                  "data_validated",
+                  "game_created",
+                  "bet_placed",
+                  "ritual_initiated",
+                  "proposal_submitted"
+                ],
+                "description": "Type of compliance event."
+              },
+              "userId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(0x)?[0-9a-fA-F]{40}$",
+                "description": "User identifier, typically an Ethereum address."
+              },
+              "payload": {
+                "type": ["string", "object"],
+                "description": "Event-specific data, either serialized as a string or structured as an object.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Serialized JSON string of event data."
+                  },
+                  {
+                    "type": "object",
+                    "description": "Structured event data.",
+                    "properties": {
+                      "postId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Post identifier for feed-related events."
+                      },
+                      "commentId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Comment identifier for comment-related events."
+                      },
+                      "reaction": {
+                        "type": "string",
+                        "enum": ["like", "love", "dislike", "share"],
+                        "description": "Reaction type for reaction-related events."
+                      },
+                      "marketId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Market identifier for market-related events."
+                      },
+                      "offerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Offer identifier for offer-related events."
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Title of market or offer."
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": ["USD", "ETH", "BTC"],
+                        "description": "Currency for offer-related events."
+                      },
+                      "price": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Price for offer-related events."
+                      },
+                      "dataId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Data identifier for oracle-related events."
+                      },
+                      "gameId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Game identifier for casino-related events."
+                      },
+                      "ritualId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Ritual identifier for ritual-related events."
+                      },
+                      "proposalId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Proposal identifier for governance-related events."
+                      },
+                      "metadata": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Additional event metadata."
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp when the event was created."
+              },
+              "context": {
+                "type": "object",
+                "description": "Contextual information about the event.",
+                "properties": {
+                  "soulboundId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Soulbound ID associated with the user."
+                  },
+                  "transactionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Blockchain transaction ID."
+                  },
+                  "module": {
+                    "type": "string",
+                    "enum": ["feed", "market", "identity", "oracle", "casino", "ritual", "governance"],
+                    "description": "DApp module triggering the event."
+                  }
+                },
+                "required": ["module"],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "auditLogs": {
+          "type": "array",
+          "description": "Array of audit logs for tracking system actions.",
+          "items": {
+            "type": "object",
+            "required": ["id", "action", "timestamp", "details"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the audit log."
+              },
+              "action": {
+                "type": "string",
+                "enum": ["event_validation", "blockchain_submission", "error_handling"],
+                "description": "Type of system action."
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of the action."
+              },
+              "details": {
+                "type": "object",
+                "description": "Details of the action.",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["success", "failed"],
+                    "description": "Outcome of the action."
+                  },
+                  "error": {
+                    "type": "string",
+                    "description": "Error message if action failed."
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Additional audit metadata."
+                  }
+                },
+                "required": ["status"],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["events", "auditLogs"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["exchange"],
+  "additionalProperties": false
+}

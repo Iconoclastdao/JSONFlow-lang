@@ -1,0 +1,303 @@
+{
+  "$id": "https://sovereign-revelation.org/schema/rituals/ritual-agent.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SovereignAgentRitual",
+  "description": "A self-sovereign agent integrating blockchain, AI, and rituals for interoperable workflows.",
+  "type": "object",
+  "required": ["id", "name", "type", "coreLogic", "identity", "ritualHooks"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Globally unique identifier for the agent.",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable agent label.",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": ["oracle", "logic", "mirror", "nlp", "observer", "signal", "executor"],
+      "default": "logic",
+      "description": "Core modality of the agent."
+    },
+    "identity": {
+      "type": "object",
+      "description": "Cryptographic identity and DID info.",
+      "properties": {
+        "publicKey": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+        "did": { "type": "string", "format": "uri" },
+        "signature": { "type": "string", "pattern": "^0x[a-fA-F0-9]+$" },
+        "created": { "type": "string", "format": "date-time" }
+      },
+      "required": ["publicKey", "did", "signature", "created"]
+    },
+    "coreLogic": {
+      "type": "string",
+      "description": "Path to core logic code file or embedded logic script for workflow execution."
+    },
+    "epigenetics": {
+      "type": "object",
+      "description": "Mutable overlays influencing agent behavior.",
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "mutations": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "description": "Embedded memory store for workflow context.",
+      "properties": {
+        "shortTerm": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "longTerm": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "blockchain_state": {
+              "type": "object",
+              "properties": {
+                "ethereum": { "type": "object", "properties": { "block": { "type": "integer" }, "stateRoot": { "type": "string" } } },
+                "cosmos": { "type": "object", "properties": { "height": { "type": "integer" }, "stateRoot": { "type": "string" } } }
+              }
+            },
+            "environment": {
+              "type": "object",
+              "properties": {
+                "runtime": { "type": "string" },
+                "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+                "dependencies_loaded": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "description": "Event-action links to steps or rituals.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "event": { "type": "string", "minLength": 1 },
+          "target": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 }
+        },
+        "required": ["event", "target", "action"]
+      }
+    },
+    "ritualHooks": {
+      "type": "object",
+      "description": "Trigger rituals at lifecycle moments.",
+      "properties": {
+        "onMount": { "type": "string", "description": "Ritual triggered on agent initialization." },
+        "onUpdate": { "type": "string", "description": "Ritual triggered on state update." },
+        "onSignal": { "type": "string", "description": "Ritual triggered on external signal." },
+        "onReflect": { "type": "string", "description": "Ritual triggered for self-reflection." },
+        "onFail": { "type": "string", "description": "Ritual triggered on failure." }
+      },
+      "required": ["onMount", "onUpdate"]
+    },
+    "nlBindings": {
+      "type": "object",
+      "description": "Natural language interface for human intent.",
+      "properties": {
+        "intentMap": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "fallbackAction": { "type": "string" }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Allowed actions or domains for the agent.",
+      "uniqueItems": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "training", "degraded"],
+      "default": "active",
+      "description": "Current operational status of the agent."
+    },
+    "meta": {
+      "type": "object",
+      "description": "Metadata for the agent and workflow.",
+      "properties": {
+        "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "author": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "target_languages": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["python", "rust", "typescript", "solidity"] }
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+              "hash": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+              "type": { "type": "string", "enum": ["library", "contract"] },
+              "source": { "type": "string", "format": "uri" }
+            },
+            "required": ["version", "type", "hash"]
+          }
+        }
+      },
+      "required": ["schema_version", "version", "author", "description"]
+    },
+    "steps": {
+      "type": "array",
+      "description": "Workflow steps for agent execution.",
+      "items": { "$ref": "#/$defs/step" },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "oneOf": [
+        {
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "type": { "const": "assert" },
+            "condition": { "$ref": "#/$defs/expr" },
+            "message": { "type": "string", "minLength": 1 },
+            "ui": { "$ref": "#/$defs/ui" },
+            "execution_policy": {
+              "type": "object",
+              "properties": { "on_failure": { "type": "string", "enum": ["continue", "stop"] } }
+            }
+          },
+          "required": ["id", "type", "condition", "message"]
+        },
+        {
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "type": { "const": "ai_infer" },
+            "model": { "type": "string", "minLength": 1 },
+            "input": { "$ref": "#/$defs/expr" },
+            "parameters": { "type": "object" },
+            "target": { "type": "string", "minLength": 1 },
+            "ui": { "$ref": "#/$defs/ui" },
+            "execution_policy": {
+              "type": "object",
+              "properties": { "on_failure": { "type": "string", "enum": ["continue", "stop"] } }
+            }
+          },
+          "required": ["id", "type", "model", "input", "target"]
+        },
+        {
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "type": { "const": "blockchain_operation" },
+            "chain": { "type": "string", "enum": ["ethereum", "cosmos"] },
+            "action": { "type": "string", "minLength": 1 },
+            "params": { "type": "object" },
+            "target": { "type": "string", "minLength": 1 },
+            "ui": { "$ref": "#/$defs/ui" },
+            "execution_policy": {
+              "type": "object",
+              "properties": { "on_failure": { "type": "string", "enum": ["continue", "stop"] } }
+            }
+          },
+          "required": ["id", "type", "chain", "action", "params", "target"]
+        },
+        {
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "type": { "const": "audit_log" },
+            "message": { "type": "string", "minLength": 1 },
+            "metadata": { "type": "object" },
+            "ui": { "$ref": "#/$defs/ui" },
+            "execution_policy": {
+              "type": "object",
+              "properties": { "on_failure": { "type": "string", "enum": ["continue", "stop"] } }
+            }
+          },
+          "required": ["id", "type", "message"]
+        },
+        {
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "type": { "const": "ritual_execute" },
+            "ritual": { "type": "string", "minLength": 1 },
+            "parameters": { "type": "object" },
+            "target": { "type": "string", "minLength": 1 },
+            "ui": { "$ref": "#/$defs/ui" },
+            "execution_policy": {
+              "type": "object",
+              "properties": { "on_failure": { "type": "string", "enum": ["continue", "stop"] } }
+            }
+          },
+          "required": ["id", "type", "ritual", "target"]
+        }
+      ]
+    },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "framework": { "type": "string", "enum": ["react", "vue", "svelte"] },
+        "component": { "type": "string", "minLength": 1 },
+        "props": { "type": "object" },
+        "css": {
+          "type": "object",
+          "properties": {
+            "className": { "type": "string" },
+            "style": { "type": "object" }
+          }
+        }
+      },
+      "required": ["framework", "component"]
+    },
+    "expr": {
+      "type": "object",
+      "properties": {
+        "get": { "type": "string" },
+        "compare": {
+          "type": "object",
+          "properties": {
+            "left": { "$ref": "#/$defs/valueOrExpr" },
+            "op": { "type": "string", "enum": ["<", ">", "===", "<=", ">=", "!=="] },
+            "right": { "$ref": "#/$defs/valueOrExpr" }
+          }
+        }
+      }
+    },
+    "valueOrExpr": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "object" },
+        { "type": "array" },
+        { "type": "null" },
+        { "$ref": "#/$defs/expr" }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

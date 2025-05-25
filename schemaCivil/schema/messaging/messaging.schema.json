@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "function": "sovereignMessaging",
+  "metadata": {
+    "schema_version": "5.3.1",
+    "version": "1.0.0",
+    "author": "xAI Team",
+    "description": "Sovereign messaging platform with peer-to-peer and group encrypted communications, integrated with dashboards and blockchain governance.",
+    "created": "2025-05-24T20:11:00Z",
+    "updated": "2025-05-24T20:11:00Z",
+    "tags": ["messaging", "blockchain", "encryption", "governance"],
+    "visualization": "graph TD\nA[Start] --> B[Validate Input]\nB --> C[Encrypt Message]\nC --> D[Store on Blockchain]\nD --> E[Update Dashboard]",
+    "examples": ["https://github.com/xai/jsonflow-examples/messaging"],
+    "docs": "https://docs.xai/jsonflow/messaging",
+    "tooling": ["vscode", "jsonflow-cli", "ethers.js"],
+    "compliance": ["GDPR", "ISO27001"],
+    "license": "MIT",
+    "standards": ["OpenAPI", "CloudEvents"]
+  },
+  "schema": {
+    "inputs": {
+      "platformId": {
+        "type": "string",
+        "description": "Unique messaging platform ID, preferably a UUID or hash.",
+        "constraints": { "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$" },
+        "default": "messaging-layer"
+      },
+      "conversationData": {
+        "type": "object",
+        "description": "Conversation creation data.",
+        "properties": {
+          "participants": {
+            "type": "array",
+            "items": { "type": "string", "description": "Wallet address of participant" },
+            "minItems": 2
+          },
+          "soulboundIds": {
+            "type": "array",
+            "items": { "type": "string", "description": "Soulbound ID of participant" },
+            "minItems": 2
+          },
+          "messageType": {
+            "type": "string",
+            "enum": ["direct", "group"],
+            "default": "direct"
+          },
+          "groupId": {
+            "type": "string",
+            "description": "Group ID for group conversations"
+          }
+        },
+        "required": ["participants", "soulboundIds"]
+      },
+      "messageData": {
+        "type": "object",
+        "description": "Message content and metadata.",
+        "properties": {
+          "sender": { "type": "string", "description": "Wallet address of sender" },
+          "soulboundId": { "type": "string", "description": "Sender’s soulbound ID" },
+          "content": {
+            "type": "object",
+            "properties": {
+              "encryptionType": {
+                "type": "string",
+                "enum": ["none", "aes-256", "ecdsa", "hybrid"],
+                "default": "hybrid"
+              },
+              "data": {
+                "type": ["string", "object"],
+                "description": "Encrypted or plaintext message content"
+              }
+            },
+            "required": ["encryptionType", "data"]
+          }
+        },
+        "required": ["sender", "soulboundId", "content"]
+      }
+    },
+    "context": {
+      "apiKey": {
+        "type": "string",
+        "source": "env",
+        "description": "API key for blockchain provider.",
+        "cache": { "enabled": true, "ttl": 3600 }
+      }
+    },
+    "outputs": {
+      "conversationId": {
+        "type": "string",
+        "description": "Unique ID for the created conversation.",
+        "destination": "database"
+      },
+      "messageId": {
+        "type": "string",
+        "description": "Unique ID for the sent message.",
+        "destination": "database"
+      },
+      "transactionId": {
+        "type": "string",
+        "description": "Blockchain transaction ID for governance or karma wage.",
+        "destination": "blockchain"
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "validateInput",
+      "type": "control",
+      "action": "validate",
+      "language": "javascript",
+      "code": "if (!input.platformId || !input.conversationData.participants.includes(input.messageData.sender)) throw new Error('Invalid input or sender not in participants');",
+      "input": "schema.inputs",
+      "output": "schema.outputs.validated",
+      "on_error": { "action": "fail", "error_code": "INVALID_INPUT" }
+    },
+    {
+      "id": "encryptMessage",
+      "type": "control",
+      "action": "encrypt",
+      "language": "javascript",
+      "tool": "crypto",
+      "code": "const encrypted = crypto.encrypt(input.messageData.content.data, 'hybrid'); return { data: encrypted };",
+      "input": "schema.inputs.messageData.content",
+      "output": "schema.outputs.messageId",
+      "on_error": { "action": "retry", "max_retries": 3 }
+    },
+    {
+      "id": "storeMessage",
+      "type": "blockchain",
+      "action": "storeMessage",
+      "language": "solidity",
+      "tool": "ethers.js",
+      "input": "schema.inputs.messageData",
+      "output": "schema.outputs.transactionId",
+      "on_error": { "action": "retry", "max_retries": 3 }
+    }
+  ],
+  "blockchain": {
+    "chain": "ethereum",
+    "contract": {
+      "address": "0x1234567890abcdef1234567890abcdef12345678",
+      "abi": "https://api.etherscan.io/api?module=contract&action=getabi&address=0x1234567890abcdef1234567890abcdef12345678"
+    },
+    "network": {
+      "rpc_url": "https://mainnet.infura.io/v3/YOUR_API_KEY",
+      "chain_id": 1
+    }
+  },
+  "security": {
+    "authentication": {
+      "type": "jwt",
+      "provider": "auth0",
+      "token_lifetime": 86400
+    },
+    "authorization": {
+      "type": "rbac",
+      "roles": ["user", "admin"],
+      "permissions": ["send_message", "create_group", "propose_governance"]
+    },
+    "encryption": {
+      "algorithm": "hybrid",
+      "key_management": "aws-kms"
+    },
+    "secrets": {
+      "manager": "aws-secrets",
+      "refs": ["messaging/api_key"]
+    }
+  },
+  "observability": {
+    "logging": {
+      "provider": "loki",
+      "level": "info"
+    },
+    "metrics": {
+      "provider": "prometheus",
+      "endpoints": ["http://localhost:9090"]
+    },
+    "tracing": {
+      "provider": "opentelemetry",
+      "sampling_rate": 1
+    },
+    "telemetry": {
+      "provider": "opentelemetry",
+      "dynamic": true
+    }
+  },
+  "orchestration": {
+    "type": "event-driven",
+    "runtime": "nodejs",
+    "dependencies": ["ethers.js", "crypto"],
+    "scaling": {
+      "min_instances": 1,
+      "max_instances": 10,
+      "auto_scaling": true
+    }
+  }
+}

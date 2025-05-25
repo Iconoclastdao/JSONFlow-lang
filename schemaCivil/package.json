@@ -1,0 +1,44 @@
+{
+  "name": "jsonflow",
+  "version": "1.0.0",
+  "description": "A DSL for interoperable workflows with blockchain, AI, NLP, quantum computing, and gaming",
+  "main": "app.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "compile": "node compiler/compileSchemas.js",
+    "generate-controllers": "node compiler/generateControllers.js",
+    "generate-frontend": "node compiler/generateFrontendComponents.js",
+    "generate-routes": "node compiler/generateRoutes.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^2.1.1",
+    "axios": "^1.9.0",
+    "compression": "^1.8.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "ethers": "^6.14.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "glob": "^11.0.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.0",
+    "openai": "^4.103.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.56.4",
+    "react-markdown": "^10.1.0",
+    "uuid": "^11.1.0",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "nodemon": "^3.1.10"
+  },
+  "author": "",
+  "license": "MIT"
+}

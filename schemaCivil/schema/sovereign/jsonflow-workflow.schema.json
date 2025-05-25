@@ -1,0 +1,964 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JSONFlow Ultimate Workflow Schema v5.3.1",
+  "description": "A universal, production-ready DSL for full-stack workflows integrating AI, blockchain, front-end, back-end, quantum computing, distributed systems, browser/search, interoperability, runtime, security, observability, developer tools, data handling, globalization, governance, lifecycle, and ecosystem features. Updated with examples, reduced redundancy, performance guidance, streamlined enums, and improved documentation.",
+  "type": "object",
+  "required": [
+    "function",
+    "schema",
+    "steps",
+    "metadata",
+    "orchestration",
+    "security"
+  ],
+  "properties": {
+    "function": {
+      "type": "string",
+      "description": "Unique workflow identifier.",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+      "examples": ["processPayment", "webSearch", "trainModel"]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata for versioning, compliance, and documentation.",
+      "properties": {
+        "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "5.3.1" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "examples": ["1.0.0"] },
+        "author": { "type": "string", "minLength": 1, "examples": ["xAI Team"] },
+        "description": { "type": "string", "minLength": 1, "examples": ["Processes a payment transaction with blockchain integration."] },
+        "created": { "type": "string", "format": "date-time", "examples": ["2025-05-24T19:56:00Z"] },
+        "updated": { "type": "string", "format": "date-time", "examples": ["2025-05-24T19:56:00Z"] },
+        "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "examples": [["payment", "blockchain", "secure"]] },
+        "visualization": { "type": "string", "description": "Mermaid diagram for workflow.", "examples": ["graph TD\nA[Start] --> B[Validate Input]\nB --> C[Process Payment]\nC --> D[Store Transaction]"] },
+        "examples": { "type": "array", "items": { "type": "string", "format": "uri" }, "examples": [["https://github.com/xai/jsonflow-examples/payment"]] },
+        "docs": { "type": "string", "format": "uri", "examples": ["https://docs.xai/jsonflow"] },
+        "tooling": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["vscode", "jsonflow-cli", "mermaid-live", "web3.js", "react-devtools", "grafana", "prometheus", "docker", "kubernetes", "github-cli", "puppeteer", "playwright", "typescript", "openapi", "custom"] },
+          "examples": [["vscode", "jsonflow-cli", "mermaid-live"]]
+        },
+        "compliance": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["GDPR", "CCPA", "HIPAA", "ISO27001", "PCI-DSS", "SOC2", "FedRAMP"] },
+          "uniqueItems": true,
+          "examples": [["GDPR", "PCI-DSS"]]
+        },
+        "license": { "type": "string", "enum": ["MIT", "Apache-2.0", "GPL-3.0", "proprietary"], "examples": ["MIT"] },
+        "standards": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["CNCF", "OpenAPI", "AsyncAPI", "CloudEvents", "W3C"] },
+          "uniqueItems": true,
+          "examples": [["OpenAPI", "CloudEvents"]]
+        }
+      },
+      "required": ["schema_version", "version", "author", "description", "examples", "docs", "license"]
+    },
+    "schema": {
+      "type": "object",
+      "description": "Defines inputs, context, outputs, and evolution rules.",
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["string", "number", "boolean", "object", "array", "binary", "html", "stream"] },
+              "description": { "type": "string", "minLength": 1 },
+              "default": { "type": ["string", "number", "boolean", "object", "array", "null"] },
+              "constraints": {
+                "type": "object",
+                "properties": {
+                  "minLength": { "type": "integer", "minimum": 0 },
+                  "maxLength": { "type": "integer", "minimum": 0 },
+                  "pattern": { "type": "string" },
+                  "minimum": { "type": "number" },
+                  "maximum": { "type": "number" },
+                  "enum": { "type": "array", "items": { "type": ["string", "number", "boolean"] }, "minItems": 1 },
+                  "rate_limit": { "type": "integer", "minimum": 0 }
+                }
+              },
+              "ui": { "$ref": "#/$defs/ui" },
+              "nlp": { "$ref": "#/$defs/nlp" },
+              "validation": {
+                "type": "object",
+                "properties": {
+                  "script": { "type": "string" },
+                  "async": { "type": "boolean", "default": false }
+                }
+              }
+            },
+            "required": ["type", "description"],
+            "examples": [
+              {
+                "userId": {
+                  "type": "string",
+                  "description": "Unique identifier for the user.",
+                  "constraints": { "pattern": "^[a-zA-Z0-9]{8,}$" },
+                  "default": "user123"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Payment amount in USD.",
+                  "constraints": { "minimum": 0.01, "maximum": 10000 }
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["string", "number", "boolean", "object", "array", "stream", "html"] },
+              "source": { "type": "string", "enum": ["env", "config", "blockchain", "api", "game", "database", "ai", "kafka", "redis", "github", "web", "custom"] },
+              "description": { "type": "string", "minLength": 1 },
+              "cache": { "$ref": "#/$defs/cache" }
+            },
+            "required": ["type", "source", "description"],
+            "examples": [
+              {
+                "apiKey": {
+                  "type": "string",
+                  "source": "env",
+                  "description": "API key for external service.",
+                  "cache": { "enabled": true, "ttl": 3600 }
+                }
+              }
+            ]
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["string", "number", "boolean", "object", "array", "game_state", "render", "stream", "html"] },
+              "description": { "type": "string", "minLength": 1 },
+              "ui": { "$ref": "#/$defs/ui" },
+              "nlp": { "$ref": "#/$defs/nlp" },
+              "destination": { "type": "string", "enum": ["api", "database", "blockchain", "file", "stream", "ui", "index"] }
+            },
+            "required": ["type", "description"],
+            "examples": [
+              {
+                "transactionId": {
+                  "type": "string",
+                  "description": "Unique ID for the processed transaction.",
+                  "destination": "database"
+                }
+              }
+            ]
+          }
+        },
+        "evolution": {
+          "type": "object",
+          "description": "Schema evolution for compatibility.",
+          "properties": {
+            "strategy": { "type": "string", "enum": ["additive", "breaking", "versioned"], "default": "additive" },
+            "migrations": { "type": "array", "items": { "type": "string", "description": "Path to migration script or description." }, "examples": [["add_field_userId_5.2.0_to_5.3.0.js"]] }
+          }
+        }
+      },
+      "required": ["inputs", "outputs"]
+    },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/step" },
+      "minItems": 1,
+      "description": "Workflow steps supporting browser, search, AI, and more.",
+      "examples": [
+        [
+          {
+            "id": "validateInput",
+            "type": "control",
+            "action": "validate",
+            "language": "javascript",
+            "code": "if (!input.userId) throw new Error('Missing userId');",
+            "input": "schema.inputs.userId",
+            "output": "schema.outputs.validated",
+            "on_error": { "action": "fail", "error_code": "INVALID_INPUT" }
+          },
+          {
+            "id": "processPayment",
+            "type": "blockchain",
+            "action": "executeContract",
+            "language": "solidity",
+            "tool": "ethers.js",
+            "input": "schema.inputs.amount",
+            "output": "schema.outputs.transactionId",
+            "on_error": { "action": "retry", "max_retries": 3 }
+          }
+        ]
+      ]
+    },
+    "libraries": {
+      "type": "object",
+      "description": "GitHub repositories as dependencies.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "format": "uri" },
+          "ref": { "type": "string" },
+          "path": { "type": "string" },
+          "type": { "type": "string", "enum": ["code", "config", "assets", "mixed"], "default": "code" },
+          "authentication": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["none", "token", "oauth"], "default": "none" },
+              "token_ref": { "type": "string" }
+            },
+            "required": ["type"]
+          },
+          "cache": { "$ref": "#/$defs/cache" },
+          "security": {
+            "type": "object",
+            "properties": {
+              "scan": { "type": "boolean", "default": true },
+              "trusted": { "type": "boolean", "default": false }
+            }
+          }
+        },
+        "required": ["url", "ref", "type"]
+      }
+    },
+    "browser": {
+      "type": "object",
+      "description": "Browser automation configuration.",
+      "properties": {
+        "engine": { "type": "string", "enum": ["puppeteer", "playwright", "selenium", "custom"], "default": "puppeteer" },
+        "headless": { "type": "boolean", "default": true },
+        "javascript": { "type": "boolean", "default": true },
+        "user_agent": { "type": "string" },
+        "viewport": {
+          "type": "object",
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "sanitize": { "type": "boolean", "default": true },
+            "cookies": { "type": "boolean", "default": false },
+            "block_resources": { "type": "array", "items": { "type": "string", "enum": ["image", "script", "stylesheet", "font"] } }
+          }
+        },
+        "cache": { "$ref": "#/$defs/cache" }
+      },
+      "required": ["engine"]
+    },
+    "search": {
+      "type": "object",
+      "description": "Search engine configuration.",
+      "properties": {
+        "provider": { "type": "string", "enum": ["google", "bing", "internal", "custom"], "default": "internal" },
+        "api_key": { "type": "string" },
+        "crawling": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "depth": { "type": "integer", "minimum": 1 },
+            "domains": { "type": "array", "items": { "type": "string", "format": "uri" } }
+          }
+        },
+        "indexing": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "storage": { "type": "string", "enum": ["elasticsearch", "opensearch", "redis", "custom"] },
+            "schema": { "type": "object" }
+          }
+        },
+        "cache": { "$ref": "#/$defs/cache" }
+      },
+      "required": ["provider"]
+    },
+    "interop": {
+      "type": "object",
+      "description": "Interoperability for schemas and plugins.",
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": { "type": "string", "format": "uri" },
+              "namespace": { "type": "string", "minLength": 1 }
+            },
+            "required": ["ref", "namespace"]
+          }
+        },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "endpoint": { "type": "string", "format": "uri" },
+              "config": { "type": "object" }
+            },
+            "required": ["name", "endpoint"]
+          }
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "description": "State management and distributed patterns.",
+      "properties": {
+        "store": { "type": "string", "enum": ["redis", "dynamodb", "postgres", "in-memory", "custom"] },
+        "pattern": { "type": "string", "enum": ["saga", "choreography", "orchestration", "none"], "default": "none" },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "ttl": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "error_flows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": { "type": "string" },
+              "action": { "type": "string", "enum": ["compensate", "retry", "escalate", "ignore"] },
+              "target": { "type": "string" }
+            },
+            "required": ["condition", "action"]
+          }
+        }
+      },
+      "required": ["store"]
+    },
+    "security": {
+      "type": "object",
+      "description": "Security and access control.",
+      "properties": {
+        "authentication": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["jwt", "oauth2", "api-key", "basic", "none"], "default": "none" },
+            "provider": { "type": "string", "enum": ["auth0", "firebase", "okta", "github", "custom"] },
+            "token_lifetime": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type"]
+        },
+        "authorization": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["rbac", "abac"], "default": "rbac" },
+            "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "permissions": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "attributes": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } }
+          },
+          "required": ["type", "roles", "permissions"]
+        },
+        "encryption": {
+          "type": "object",
+          "properties": {
+            "algorithm": { "type": "string", "enum": ["AES-256", "RSA", "ECDSA", "custom"], "default": "AES-256" },
+            "key_management": { "type": "string", "enum": ["aws-kms", "gcp-kms", "vault", "custom"] }
+          },
+          "required": ["algorithm"]
+        },
+        "attestation": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "provider": { "type": "string", "enum": ["aws-nitro", "azure-confidential", "tpm", "custom"] },
+            "claims": { "type": "object" }
+          }
+        },
+        "secrets": {
+          "type": "object",
+          "properties": {
+            "manager": { "type": "string", "enum": ["aws-secrets", "hashicorp-vault", "gcp-secrets", "custom"] },
+            "refs": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["manager"]
+        }
+      },
+      "required": ["authentication", "authorization", "encryption", "secrets"]
+    },
+    "observability": {
+      "type": "object",
+      "description": "Monitoring and logging.",
+      "properties": {
+        "logging": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["logstash", "fluentd", "cloudwatch", "loki", "custom"] },
+            "level": { "type": "string", "enum": ["debug", "info", "warn", "error"], "default": "info" }
+          },
+          "required": ["provider"]
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["prometheus", "grafana", "datadog", "newrelic", "custom"] },
+            "endpoints": { "type": "array", "items": { "type": "string", "format": "uri" } }
+          },
+          "required": ["provider"]
+        },
+        "tracing": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["jaeger", "zipkin", "opentelemetry", "custom"] },
+            "sampling_rate": { "type": "number", "minimum": 0, "maximum": 1, "default": 1 }
+          },
+          "required": ["provider"]
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "dynamic": { "type": "boolean", "default": false },
+            "provider": { "type": "string", "enum": ["opentelemetry", "datadog", "newrelic", "custom"] }
+          },
+          "required": ["provider"]
+        },
+        "debugging": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "endpoint": { "type": "string", "format": "uri" }
+          }
+        },
+        "health_checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "endpoint": { "type": "string", "format": "uri" },
+              "interval": { "type": "integer", "minimum": 1 }
+            },
+            "required": ["name", "endpoint"]
+          }
+        }
+      },
+      "required": ["logging", "metrics", "tracing", "telemetry"]
+    },
+    "developer": {
+      "type": "object",
+      "description": "Developer experience tools.",
+      "properties": {
+        "sdks": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["javascript", "typescript", "python", "go", "rust", "custom"] },
+          "minItems": 1
+        },
+        "typings": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "format": { "type": "string", "enum": ["typescript", "json-schema", "custom"] }
+          },
+          "required": ["enabled", "format"]
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "tools": { "type": "array", "items": { "type": "string", "enum": ["ajv", "zod", "yup", "custom"] }, "minItems": 1 },
+            "strict": { "type": "boolean", "default": false }
+          },
+          "required": ["tools"]
+        }
+      },
+      "required": ["sdks", "typings", "validation"]
+    },
+    "data": {
+      "type": "object",
+      "description": "Data and event handling.",
+      "properties": {
+        "streams": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "provider": { "type": "string", "enum": ["kafka", "rabbitmq", "redis-streams", "aws-kinesis", "custom"] },
+            "topics": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["enabled", "provider"]
+        },
+        "privacy": {
+          "type": "object",
+          "properties": {
+            "anonymization": { "type": "boolean", "default": false },
+            "encryption": { "type": "boolean", "default": false },
+            "retention": { "type": "integer", "minimum": 0 }
+          }
+        }
+      },
+      "required": ["streams", "privacy"]
+    },
+    "globalization": {
+      "type": "object",
+      "description": "Internationalization and accessibility.",
+      "properties": {
+        "i18n": {
+          "type": "object",
+          "properties": {
+            "languages": { "type": "array", "items": { "type": "string", "enum": ["en", "es", "zh", "fr", "de", "ja", "ru", "ar"] }, "minItems": 1 },
+            "default": { "type": "string", "enum": ["en", "es", "zh", "fr", "de", "ja", "ru", "ar"], "default": "en" },
+            "translations": { "type": "string", "format": "uri" }
+          },
+          "required": ["languages", "default"]
+        },
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "wcag": { "type": "string", "enum": ["2.0", "2.1", "2.2"], "default": "2.1" },
+            "metadata": { "type": "object" }
+          },
+          "required": ["wcag"]
+        }
+      },
+      "required": ["i18n", "accessibility"]
+    },
+    "governance": {
+      "type": "object",
+      "description": "Governance and compliance.",
+      "properties": {
+        "policies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "code": { "type": "string" },
+              "enforcement": { "type": "string", "enum": ["strict", "advisory"], "default": "advisory" }
+            },
+            "required": ["name", "code"]
+          }
+        },
+        "audit": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "provider": { "type": "string", "enum": ["cloudwatch", "loki", "elastic", "custom"] },
+            "retention": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["enabled", "provider"]
+        }
+      },
+      "required": ["policies", "audit"]
+    },
+    "lifecycle": {
+      "type": "object",
+      "description": "Workflow lifecycle management.",
+      "properties": {
+        "hot_reload": { "type": "boolean", "default": false },
+        "rollback": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "strategy": { "type": "string", "enum": ["revert", "compensate", "custom"], "default": "revert" }
+          },
+          "required": ["enabled", "strategy"]
+        },
+        "multi_tenancy": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "isolation": { "type": "string", "enum": ["namespace", "database", "container", "custom"] }
+          },
+          "required": ["enabled"]
+        }
+      },
+      "required": ["hot_reload", "rollback", "multi_tenancy"]
+    },
+    "ecosystem": {
+      "type": "object",
+      "description": "Ecosystem integration.",
+      "properties": {
+        "registry": { "type": "string", "format": "uri" },
+        "standards": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["CNCF", "OpenAPI", "AsyncAPI", "CloudEvents", "W3C"] },
+          "uniqueItems": true
+        }
+      },
+      "required": ["registry"]
+    },
+    "orchestration": {
+      "type": "object",
+      "description": "Workflow orchestration configuration.",
+      "properties": {
+        "type": { "type": "string", "enum": ["sequential", "parallel", "serverless", "event-driven"], "default": "sequential" },
+        "runtime": { "type": "string", "enum": ["nodejs", "python", "go", "rust", "docker", "kubernetes", "aws-lambda", "gcp-cloudrun", "custom"] },
+        "dependencies": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "scaling": {
+          "type": "object",
+          "properties": {
+            "min_instances": { "type": "integer", "minimum": 1, "default": 1 },
+            "max_instances": { "type": "integer", "minimum": 1 },
+            "auto_scaling": { "type": "boolean", "default": false }
+          }
+        },
+        "load_balancer": {
+          "type": "object",
+          "properties": {
+            "strategy": { "type": "string", "enum": ["round-robin", "least-connections", "ip-hash"], "default": "round-robin" },
+            "health_check": { "type": "string", "format": "uri" }
+          }
+        }
+      },
+      "required": ["type", "runtime"]
+    },
+    "nlp": {
+      "type": "object",
+      "description": "Natural Language Processing configuration.",
+      "properties": {
+        "model": { "type": "string", "examples": ["grok-3", "llama-3"] },
+        "mode": { "type": "string", "enum": ["chat", "command", "query", "multimodal", "codegen"], "default": "chat" },
+        "inputs": { "type": "array", "items": { "type": "string", "enum": ["text", "voice", "image", "video", "html"] }, "uniqueItems": true },
+        "tasks": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["entity", "sentiment", "intent", "summarization", "translation", "codegen", "optimization", "web_extraction"] },
+          "uniqueItems": true
+        },
+        "language": { "type": "string", "enum": ["en", "es", "zh", "fr", "de", "ja", "ru", "ar"], "default": "en" },
+        "optimization": {
+          "type": "object",
+          "properties": {
+            "auto_code": { "type": "boolean", "default": false },
+            "prompt_engineering": { "type": "boolean", "default": false }
+          }
+        }
+      },
+      "required": ["model", "mode"]
+    },
+    "ai": {
+      "type": "object",
+      "description": "AI and machine learning configuration.",
+      "properties": {
+        "model": { "type": "string" },
+        "task": { "type": "string", "enum": ["inference", "training", "fine-tuning", "quantization"] },
+        "framework": { "type": "string", "enum": ["pytorch", "tensorflow", "huggingface", "onnx", "custom"] },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "batch_size": { "type": "integer", "minimum": 1 },
+            "learning_rate": { "type": "number", "minimum": 0 },
+            "epochs": { "type": "integer", "minimum": 1 },
+            "precision": { "type": "string", "enum": ["fp16", "fp32", "int8"], "default": "fp32" }
+          }
+        },
+        "hardware": { "type": "string", "enum": ["cpu", "gpu", "tpu", "quantum", "custom"] }
+      },
+      "required": ["model", "task", "framework"]
+    },
+    "blockchain": {
+      "type": "object",
+      "description": "Blockchain integration configuration.",
+      "properties": {
+        "chain": { "type": "string", "enum": ["ethereum", "solana", "starknet", "polkadot", "cosmos", "custom"] },
+        "contract": {
+          "type": "object",
+          "properties": {
+            "address": { "type": "string", "pattern": "^0x[a-fA-F0-9]+$" },
+            "abi": { "type": "string", "format": "uri" },
+            "bytecode": { "type": "string" }
+          }
+        },
+        "crypto": {
+          "type": "object",
+          "properties": {
+            "operation": { "type": "string", "enum": ["encrypt", "decrypt", "sign", "verify"] },
+            "library": { "type": "string", "enum": ["web3.js", "ethers.js", "tccflow", "viem", "custom"] },
+            "wallet": { "type": "string", "enum": ["metamask", "ledger", "trezor", "custom"] }
+          }
+        },
+        "network": {
+          "type": "object",
+          "properties": {
+            "rpc_url": { "type": "string", "format": "uri" },
+            "chain_id": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["rpc_url", "chain_id"]
+        }
+      },
+      "required": ["chain", "network"]
+    },
+    "react": {
+      "type": "object",
+      "description": "React front-end configuration.",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "path": { "type": "string" },
+              "props": { "type": "object" },
+              "lazy_load": { "type": "boolean", "default": false },
+              "library_ref": { "type": "string" }
+            },
+            "required": ["name", "path"]
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+        },
+        "bundler": { "type": "string", "enum": ["vite", "webpack", "esbuild", "rollup"] },
+        "ssr": { "type": "boolean", "default": false }
+      },
+      "required": ["components", "bundler"]
+    },
+    "quantum": {
+      "type": "object",
+      "description": "Quantum computing configuration.",
+      "properties": {
+        "simulator": { "type": "string", "enum": ["qiskit", "cirq", "pennylane", "custom"] },
+        "algorithm": { "type": "string", "enum": ["grover", "shor", "qft", "vqe", "qaqa", "custom"] },
+        "backend": { "type": "string", "enum": ["ibmq", "aws-braket", "google-quantum", "custom"] }
+      },
+      "required": ["simulator", "algorithm"]
+    },
+    "performance": {
+      "type": "object",
+      "description": "Performance optimization configuration for workflows.",
+      "properties": {
+        "resource_limits": {
+          "type": "object",
+          "description": "Constraints on compute and memory resources.",
+          "properties": {
+            "cpu": { "type": "string", "description": "CPU limit (e.g., '2' for 2 cores)", "pattern": "^[0-9]+$" },
+            "memory": { "type": "string", "description": "Memory limit (e.g., '4Gi' for 4 gibibytes)", "pattern": "^[0-9]+(Mi|Gi)$" }
+          }
+        },
+        "batch_processing": {
+          "type": "object",
+          "description": "Batch processing configuration for high-throughput workflows.",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "batch_size": { "type": "integer", "minimum": 1, "default": 100 },
+            "concurrency_limit": { "type": "integer", "minimum": 1, "default": 10 }
+          },
+          "required": ["enabled", "batch_size", "concurrency_limit"]
+        },
+        "optimization_level": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high"],
+          "default": "none",
+          "description": "Level of optimization for runtime performance."
+        }
+      },
+      "required": ["resource_limits", "batch_processing"]
+    },
+    "config": {
+      "type": "object",
+      "description": "Runtime configuration.",
+      "properties": {
+        "environment": { "type": "string", "enum": ["dev", "staging", "prod"] },
+        "retry_policy": {
+          "type": "object",
+          "properties": {
+            "max_retries": { "type": "integer", "minimum": 0, "default": 3 },
+            "backoff": { "type": "string", "enum": ["linear", "exponential"], "default": "exponential" },
+            "jitter": { "type": "boolean", "default": true }
+          }
+        },
+        "timeout": { "type": "integer", "minimum": 0 },
+        "circuit_breaker": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "failure_threshold": { "type": "integer", "minimum": 1 },
+            "reset_timeout": { "type": "integer", "minimum": 0 }
+          }
+        }
+      },
+      "required": ["environment"]
+    },
+    "access_policy": {
+      "type": "object",
+      "description": "Access control policies.",
+      "properties": {
+        "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "permissions": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "audit_log": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/$defs/enabled" },
+            "provider": { "type": "string", "enum": ["cloudwatch", "loki", "elastic", "custom"] }
+          }
+        }
+      },
+      "required": ["roles", "permissions"]
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "condition": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "severity": { "type": "string", "enum": ["low", "medium", "high"], "default": "medium" }
+        },
+        "required": ["condition", "message"],
+        "examples": [
+          {
+            "condition": "schema.outputs.transactionId !== null",
+            "message": "Transaction ID must be generated.",
+            "severity": "high"
+          },
+          {
+            "condition": "schema.inputs.amount > 0",
+            "message": "Payment amount must be positive.",
+            "severity": "medium"
+          }
+        ]
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "inputs": { "type": "object" },
+          "expected": { "type": "object" },
+          "description": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "enum": ["unit", "integration", "e2e", "performance"] }
+        },
+        "required": ["name", "inputs", "expected", "type"],
+        "examples": [
+          {
+            "name": "testPaymentProcessing",
+            "type": "integration",
+            "inputs": { "userId": "user123", "amount": 50.00 },
+            "expected": { "transactionId": "tx_12345" },
+            "description": "Tests successful payment processing with valid inputs."
+          }
+        ]
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Custom extensions.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "minLength": 1 },
+          "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "schema": { "type": "string", "format": "uri" },
+          "plugin": { "type": "string", "format": "uri" },
+          "library_ref": { "type": "string" }
+        },
+        "required": ["namespace", "version"]
+      }
+    },
+    "ci_cd": {
+      "type": "object",
+      "description": "CI/CD pipeline configuration.",
+      "properties": {
+        "provider": { "type": "string", "enum": ["github-actions", "jenkins", "gitlab-ci", "circleci", "custom"] },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "script": { "type": "string" },
+              "environment": { "type": "string", "enum": ["dev", "staging", "prod"] },
+              "library_update": { "type": "boolean", "default": false }
+            },
+            "required": ["name", "script"]
+          }
+        },
+        "artifacts": {
+          "type": "object",
+          "properties": {
+            "repository": { "type": "string", "format": "uri" },
+            "retention": { "type": "integer", "minimum": 0 }
+          }
+        }
+      },
+      "required": ["provider", "stages"]
+    }
+  },
+  "$defs": {
+    "ui": {
+      "type": "object",
+      "properties": {
+        "framework": { "type": "string", "enum": ["react", "vue", "svelte", "flutter", "angular", "custom"] },
+        "component": { "type": "string", "minLength": 1 },
+        "props": { "type": "object" },
+        "style": { "type": "object" },
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "wcag": { "type": "string", "enum": ["2.0", "2.1", "2.2"], "default": "2.1" },
+            "aria": { "type": "boolean", "default": true }
+          }
+        }
+      },
+      "required": ["framework", "component"]
+    },
+    "step": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "enum": ["control", "ai", "blockchain", "game", "quantum", "distributed", "frontend", "backend", "database", "browser", "search", "custom"] },
+        "action": { "type": "string", "minLength": 1 },
+        "language": { "type": "string", "enum": ["python", "javascript", "typescript", "solidity", "rust", "go", "java", "kotlin", "custom"] },
+        "code": { "type": "string" },
+        "tool": { "type": "string", "enum": ["python-lib", "web3.js", "ethers.js", "tccflow", "pytorch", "tensorflow", "graphql", "puppeteer", "playwright", "custom"] },
+        "library_ref": { "type": "string" },
+        "input": { "type": "string" },
+        "output": { "type": "string" },
+        "on_error": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string", "enum": ["retry", "skip", "fail", "notify"] },
+            "max_retries": { "type": "integer", "minimum": 0 },
+            "error_code": { "type": "string" }
+          }
+        },
+        "concurrency": {
+          "type": "object",
+          "properties": {
+            "parallel": { "type": "boolean", "default": false },
+            "max_concurrent": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "timeout": { "type": "integer", "minimum": 0 },
+        "state_ref": { "type": "string", "description": "Reference to state store." }
+      },
+      "required": ["id", "type", "action"]
+    },
+    "cache": {
+      "type": "object",
+      "description": "Caching configuration for reusable components.",
+      "properties": {
+        "enabled": { "$ref": "#/$defs/enabled" },
+        "ttl": { "type": "integer", "minimum": 0, "default": 86400 }
+      },
+      "required": ["enabled", "ttl"]
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Flag to enable or disable a feature.",
+      "default": false
+    },
+    "nlp": {
+      "type": "object",
+      "description": "Natural Language Processing settings for inputs/outputs.",
+      "properties": {
+        "enabled": { "$ref": "#/$defs/enabled" },
+        "tasks": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["entity", "sentiment", "intent", "summarization", "translation", "codegen", "web_extraction"] },
+          "uniqueItems": true
+        }
+      },
+      "required": ["enabled"]
+    }
+  },
+  "additionalProperties": true
+}

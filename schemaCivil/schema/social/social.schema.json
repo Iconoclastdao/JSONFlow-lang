@@ -1,0 +1,251 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/social.schema.json",
+  "title": "SovereignSocialGraph",
+  "type": "object",
+  "description": "Schema for decentralized social graph, feeds, posts, profiles, and platforms.",
+  "properties": {
+    "id": { "type": "string", "default": "social-graph" },
+    "title": { "type": "string", "default": "Sovereign Social" },
+    "type": { "type": "string", "enum": ["social"], "default": "social" },
+    "layout": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "integer" },
+        "y": { "type": "integer" },
+        "w": { "type": "integer" },
+        "h": { "type": "integer" }
+      }
+    },
+    "social": {
+      "type": "object",
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "user": { "type": "string" },
+              "username": { "type": "string" },
+              "bio": { "type": "string" },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "updatedAt": { "type": "string", "format": "date-time" },
+              "status": { "type": "string", "enum": ["active", "inactive"] }
+            },
+            "required": ["user", "username", "createdAt", "updatedAt", "status"]
+          }
+        },
+        "posts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "user": { "type": "string" },
+              "author": { "type": "string" },
+              "content": { "type": "string" },
+              "visibility": { "type": "string", "enum": ["public", "private", "group"] },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "likes": { "type": "integer", "default": 0 },
+              "comments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "author": { "type": "string" },
+                    "content": { "type": "string" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  },
+                  "required": ["author", "content", "timestamp"]
+                }
+              },
+              "tags": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["id", "user", "content", "visibility", "timestamp", "likes", "comments"]
+          }
+        },
+        "videos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "author": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "url": { "type": "string" },
+              "thumbnail": { "type": "string" },
+              "tags": { "type": "array", "items": { "type": "string" } },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "views": { "type": "integer", "default": 0 },
+              "likes": { "type": "integer", "default": 0 },
+              "dislikes": { "type": "integer", "default": 0 },
+              "comments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "author": { "type": "string" },
+                    "content": { "type": "string" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  },
+                  "required": ["author", "content", "timestamp"]
+                }
+              }
+            },
+            "required": ["id", "author", "title", "url", "timestamp"]
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "user": { "type": "string" },
+              "target": { "type": "string" },
+              "status": { "type": "string", "enum": ["active", "pending"] },
+              "createdAt": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id", "user", "target", "status", "createdAt"]
+          }
+        },
+        "follows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "bondScore": { "type": "number", "default": 1.0 }
+            },
+            "required": ["from", "to"]
+          }
+        },
+        "reputation": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        }
+      },
+      "required": ["profiles", "posts", "connections", "videos", "follows", "reputation"]
+    },
+    "feed": {
+      "type": "object",
+      "properties": {
+        "posts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "creator": { "type": "string" },
+              "soulboundId": { "type": "string" },
+              "content": { "type": "string" },
+              "visibility": { "type": "string", "enum": ["public", "private", "group"] },
+              "groupId": { "type": "string" },
+              "status": { "type": "string", "enum": ["active", "moderated", "removed"] },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "expiry": { "type": "string", "format": "date-time" },
+              "comments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "creator": { "type": "string" },
+                    "soulboundId": { "type": "string" },
+                    "content": { "type": "string" },
+                    "createdAt": { "type": "string", "format": "date-time" }
+                  },
+                  "required": ["id", "creator", "soulboundId", "content", "createdAt"]
+                }
+              },
+              "reactions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "agent": { "type": "string" },
+                    "soulboundId": { "type": "string" },
+                    "type": { "type": "string" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  },
+                  "required": ["agent", "soulboundId", "type", "timestamp"]
+                }
+              },
+              "tags": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["id", "creator", "soulboundId", "content", "visibility", "status", "timestamp", "createdAt", "expiry"]
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "creator": { "type": "string" },
+              "soulboundId": { "type": "string" },
+              "title": { "type": "string" },
+              "members": { "type": "array", "items": { "type": "string" } },
+              "createdAt": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id", "creator", "soulboundId", "title", "members", "createdAt"]
+          }
+        },
+        "disputes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "creator": { "type": "string" },
+              "target": { "type": "string" },
+              "reason": { "type": "string" },
+              "status": { "type": "string", "enum": ["open", "resolved", "dismissed"] },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "resolution": { "type": "object" }
+            },
+            "required": ["id", "creator", "target", "reason", "status", "createdAt"]
+          }
+        }
+      },
+      "required": ["posts", "groups", "disputes"]
+    },
+    "platform": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "posts": { "type": "array", "items": { "$ref": "#/properties/feed/properties/posts/items" } },
+        "groups": { "type": "array", "items": { "$ref": "#/properties/feed/properties/groups/items" } },
+        "disputes": { "type": "array", "items": { "$ref": "#/properties/feed/properties/disputes/items" } },
+        "governance": {
+          "type": "object",
+          "properties": {
+            "proposalThreshold": { "type": "number" },
+            "moderationThreshold": { "type": "number" },
+            "disputeResolution": { "type": "string" },
+            "votingContract": { "type": "string" }
+          },
+          "required": ["proposalThreshold", "moderationThreshold", "disputeResolution"]
+        },
+        "transactionHooks": {
+          "type": "object",
+          "properties": {
+            "onPostCreate": { "type": "string" },
+            "onComment": { "type": "string" },
+            "onReaction": { "type": "string" }
+          }
+        },
+        "karmaWage": { "type": "number" }
+      },
+      "required": ["id", "type", "title", "createdAt", "posts", "groups", "disputes", "governance"]
+    }
+  },
+  "required": ["id", "title", "type", "layout", "social", "feed", "platform"]
+}

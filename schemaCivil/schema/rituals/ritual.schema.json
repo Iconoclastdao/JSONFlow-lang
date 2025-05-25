@@ -1,0 +1,672 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/rituals/ritual.schema.json",
+  "description": "Schema for validating ritualData in RitualController, with metadata for interoperable workflows integrating blockchain, AI, quantum computing, UI, and game development.",
+  "type": "object",
+  "properties": {
+    "rituals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initiator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "target": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "executedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "type",
+                "target",
+                "executedAt"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "initiator",
+          "actions",
+          "status",
+          "timestamp"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initiator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "payload": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "verified",
+              "rejected"
+            ]
+          },
+          "verificationCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "initiator",
+          "type",
+          "payload",
+          "timestamp",
+          "status",
+          "verificationCount"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "consensusRecords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signalId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reached": {
+            "type": "boolean"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "verifications": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "signalId",
+          "reached",
+          "timestamp",
+          "verifications"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "rituals",
+    "signals",
+    "consensusRecords"
+  ],
+  "additionalProperties": false,
+  "metadata": {
+    "schema_version": "1.2.0",
+    "version": "1.0.0",
+    "author": "SovereignRevelation",
+    "description": "Orchestrates rituals for covenant validation, signal verification, self-reflection, hormone release, consensus, and neural signal initiation.",
+    "function": "ritual_orchestrator",
+    "created": "2025-05-22T10:00:00Z",
+    "updated": "2025-05-22T20:10:00Z",
+    "tags": [
+      "ritual",
+      "blockchain",
+      "ai",
+      "consensus",
+      "neural"
+    ],
+    "target_languages": [
+      "solidity",
+      "typescript"
+    ],
+    "mermaid": "graph TD;\n  A[Start] --> B[Validate Covenant];\n  B --> C[Signal Verification];\n  C --> D[Self Reflect];\n  D --> E[Release Hormone];\n  E --> F[Quorum Consensus];\n  F --> G[Neural Signal Initiation];\n  G --> H[Initiate Signal];\n  H --> I[End];"
+  },
+  "nlp": {
+    "id": "ritual_nlp_panel",
+    "title": "Ritual Orchestrator NLP Interface",
+    "type": "nl",
+    "source": "grok_3_model",
+    "layout": {
+      "x": 0,
+      "y": 0,
+      "w": 12,
+      "h": 6
+    },
+    "nl": {
+      "mode": "command",
+      "model": "grok_3",
+      "bindingTarget": "ritual_orchestrator",
+      "mapIntent": {
+        "validate_covenant": "execute_validate_covenant",
+        "verify_signal": "execute_signal_verification",
+        "self_reflect": "execute_self_reflect",
+        "release_hormone": "execute_release_hormone",
+        "check_consensus": "execute_quorum_consensus_check",
+        "initiate_neural_signal": "execute_neural_signal_initiation",
+        "initiate_signal": "execute_initiate_signal"
+      },
+      "language": "en",
+      "history": true,
+      "contextWindow": 1000,
+      "confidenceThreshold": 0.7,
+      "fallbackAction": "log_unknown_intent",
+      "analogyMap": [
+        {
+          "sourceConcept": "covenant",
+          "targetConcept": "agreement",
+          "analogyType": "functional",
+          "weight": 0.9
+        },
+        {
+          "sourceConcept": "signal",
+          "targetConcept": "message",
+          "analogyType": "functional",
+          "weight": 0.8
+        }
+      ],
+      "preprocessing": {
+        "tokenization": "wordpiece",
+        "normalization": [
+          "lowercase",
+          "stopwords"
+        ]
+      },
+      "postprocessing": {
+        "output_format": "json",
+        "sanitization": true
+      }
+    }
+  },
+  "schema": {
+    "inputs": {
+      "covenant_key": {
+        "type": "string",
+        "description": "Key for covenant validation",
+        "nl_noun": "covenant key",
+        "constraints": {
+          "minLength": 1
+        }
+      },
+      "trust_score": {
+        "type": "number",
+        "description": "Trust score for covenant",
+        "nl_noun": "trust score",
+        "constraints": {
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "soul_credential": {
+        "type": "string",
+        "description": "Credential for signal verification",
+        "nl_noun": "soul credential"
+      },
+      "opt_in": {
+        "type": "boolean",
+        "description": "User opt-in status",
+        "nl_noun": "opt-in status"
+      },
+      "awareness_module": {
+        "type": "string",
+        "description": "Module for self-reflection",
+        "nl_noun": "awareness module"
+      },
+      "stress_level": {
+        "type": "number",
+        "description": "System stress level",
+        "nl_noun": "stress level",
+        "constraints": {
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "neural_pathway": {
+        "type": "string",
+        "description": "Neural pathway identifier",
+        "nl_noun": "neural pathway"
+      },
+      "quorum_key": {
+        "type": "string",
+        "description": "Key for quorum consensus",
+        "nl_noun": "quorum key"
+      },
+      "node_count": {
+        "type": "integer",
+        "description": "Number of nodes in quorum",
+        "nl_noun": "node count",
+        "constraints": {
+          "minimum": 1
+        }
+      },
+      "neural_pathway_ready": {
+        "type": "boolean",
+        "description": "Neural pathway readiness",
+        "nl_noun": "pathway readiness"
+      },
+      "signal_key": {
+        "type": "string",
+        "description": "Key for signal initiation",
+        "nl_noun": "signal key"
+      },
+      "network_access": {
+        "type": "boolean",
+        "description": "Network access status",
+        "nl_noun": "network access"
+      }
+    },
+    "context": {
+      "system_state": {
+        "type": "object",
+        "source": "config",
+        "nl_noun": "system state",
+        "nlp_processing": {
+          "entity_recognition": true
+        }
+      },
+      "blockchain_state": {
+        "type": "object",
+        "source": "blockchain",
+        "nl_noun": "blockchain state"
+      }
+    },
+    "outputs": {
+      "approve_covenant": {
+        "type": "boolean",
+        "description": "Covenant approval status",
+        "nl_noun": "covenant approval"
+      },
+      "grant_signal_channel": {
+        "type": "string",
+        "description": "Signal channel identifier",
+        "nl_noun": "signal channel"
+      },
+      "update_reflection": {
+        "type": "object",
+        "description": "Updated reflection state",
+        "nl_noun": "reflection state"
+      },
+      "emit_hormone": {
+        "type": "string",
+        "description": "Emitted hormone identifier",
+        "nl_noun": "hormone emission"
+      },
+      "approve_consensus": {
+        "type": "boolean",
+        "description": "Consensus approval status",
+        "nl_noun": "consensus approval"
+      },
+      "activate_synapse": {
+        "type": "string",
+        "description": "Activated synapse identifier",
+        "nl_noun": "synapse activation"
+      },
+      "emit_signal": {
+        "type": "string",
+        "description": "Emitted signal identifier",
+        "nl_noun": "signal emission"
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "validate_covenant_assert",
+      "type": "assert",
+      "condition": {
+        "compare": {
+          "left": {
+            "get": "trust_score"
+          },
+          "op": ">=",
+          "right": 0.7
+        }
+      },
+      "message": "Trust score must be at least 0.7 for covenant validation.",
+      "nl_phrase": "Verify covenant trust score"
+    },
+    {
+      "id": "validate_covenant_operation",
+      "type": "blockchain_operation",
+      "chain": "ethereum",
+      "action": "governance",
+      "params": {
+        "covenant_key": {
+          "get": "covenant_key"
+        },
+        "action": "approve"
+      },
+      "target": "approve_covenant",
+      "nl_phrase": "Approve covenant on blockchain"
+    },
+    {
+      "id": "validate_covenant_audit",
+      "type": "audit_log",
+      "message": "Covenant validated with trust score 0.85",
+      "metadata": {
+        "origin": "CovenantHub",
+        "timestamp": "2025-05-22T10:15:00Z",
+        "signal_id": "COV_001",
+        "hash": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d"
+      },
+      "nl_phrase": "Log covenant validation"
+    },
+    {
+      "id": "signal_verification_assert",
+      "type": "assert",
+      "condition": {
+        "get": "soul_credential"
+      },
+      "message": "Soul credential must be valid for signal verification.",
+      "nl_phrase": "Verify soul credential"
+    },
+    {
+      "id": "signal_verification_crypto",
+      "type": "crypto_verify",
+      "algorithm": "ecdsa",
+      "data": {
+        "get": "soul_credential"
+      },
+      "signature": {
+        "get": "soul_credential_signature"
+      },
+      "key": {
+        "get": "public_key"
+      },
+      "target": "verification_result",
+      "nl_phrase": "Verify credential cryptographically"
+    },
+    {
+      "id": "signal_verification_call",
+      "type": "call",
+      "function": "grant_signal_channel",
+      "args": {
+        "credential": {
+          "get": "soul_credential"
+        }
+      },
+      "target": "grant_signal_channel",
+      "nl_phrase": "Grant signal channel access"
+    },
+    {
+      "id": "self_reflect_assert",
+      "type": "assert",
+      "condition": {
+        "get": "awareness_module"
+      },
+      "message": "Awareness module required for self-reflection.",
+      "nl_phrase": "Check awareness module"
+    },
+    {
+      "id": "self_reflect_call",
+      "type": "call",
+      "function": "update_reflection",
+      "args": {
+        "reflection_count": 1
+      },
+      "target": "update_reflection",
+      "nl_phrase": "Update reflection state"
+    },
+    {
+      "id": "self_reflect_audit",
+      "type": "audit_log",
+      "message": "Self-reflection completed",
+      "metadata": {
+        "origin": "ReflectionHub",
+        "timestamp": "2025-05-22T10:15:00Z",
+        "signal_id": "REF_001",
+        "hash": "e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f"
+      },
+      "nl_phrase": "Log self-reflection"
+    },
+    {
+      "id": "release_hormone_while",
+      "type": "while",
+      "condition": {
+        "compare": {
+          "left": {
+            "get": "stress_level"
+          },
+          "op": ">",
+          "right": 0.8
+        }
+      },
+      "body": [
+        {
+          "id": "release_hormone_call",
+          "type": "call",
+          "function": "emit_hormone",
+          "args": {
+            "stress_level": {
+              "get": "stress_level"
+            }
+          },
+          "target": "emit_hormone",
+          "nl_phrase": "Emit hormone"
+        },
+        {
+          "id": "release_hormone_audit",
+          "type": "audit_log",
+          "message": "Hormone released due to stress level 0.9",
+          "metadata": {
+            "origin": "NeuralHub",
+            "timestamp": "2025-05-22T10:15:00Z",
+            "signal_id": "HOR_001",
+            "hash": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e"
+          },
+          "nl_phrase": "Log hormone release"
+        }
+      ],
+      "max_iterations": 3,
+      "nl_phrase": "Loop hormone release while stress level high"
+    },
+    {
+      "id": "quorum_consensus_assert",
+      "type": "assert",
+      "condition": {
+        "compare": {
+          "left": {
+            "get": "quorum_percentage"
+          },
+          "op": ">=",
+          "right": 0.67
+        }
+      },
+      "message": "Quorum percentage must be at least 0.67 for consensus.",
+      "nl_phrase": "Verify quorum consensus"
+    },
+    {
+      "id": "quorum_consensus_call",
+      "type": "call",
+      "function": "approve_consensus",
+      "args": {
+        "quorum_key": {
+          "get": "quorum_key"
+        }
+      },
+      "target": "approve_consensus",
+      "nl_phrase": "Approve consensus"
+    },
+    {
+      "id": "quorum_consensus_audit",
+      "type": "audit_log",
+      "message": "Consensus approved with quorum percentage 0.75",
+      "metadata": {
+        "origin": "ConsensusHub",
+        "timestamp": "2025-05-22T10:15:00Z",
+        "signal_id": "CON_001",
+        "hash": "f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a"
+      },
+      "nl_phrase": "Log consensus approval"
+    },
+    {
+      "id": "neural_signal_while",
+      "type": "while",
+      "condition": {
+        "compare": {
+          "left": {
+            "get": "signal_intensity"
+          },
+          "op": ">",
+          "right": 0.5
+        }
+      },
+      "body": [
+        {
+          "id": "neural_signal_call",
+          "type": "call",
+          "function": "activate_synapse",
+          "args": {
+            "signal_intensity": {
+              "get": "signal_intensity"
+            }
+          },
+          "target": "activate_synapse",
+          "nl_phrase": "Activate synapse"
+        },
+        {
+          "id": "neural_signal_audit",
+          "type": "audit_log",
+          "message": "Neural signal initiated with intensity 0.7",
+          "metadata": {
+            "origin": "GenesisHub.Core",
+            "timestamp": "2025-05-22T20:10:00Z",
+            "signal_id": "SIG_001",
+            "hash": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+          },
+          "nl_phrase": "Log neural signal"
+        }
+      ],
+      "max_iterations": 5,
+      "nl_phrase": "Loop neural signal initiation while intensity high"
+    },
+    {
+      "id": "initiate_signal_assert",
+      "type": "assert",
+      "condition": {
+        "get": "signal_key"
+      },
+      "message": "Valid signal key required for signal initiation.",
+      "nl_phrase": "Verify signal key"
+    },
+    {
+      "id": "initiate_signal_call",
+      "type": "call",
+      "function": "emit_signal",
+      "args": {
+        "signal_id": "SIG_002",
+        "strength": 0.9
+      },
+      "target": "emit_signal",
+      "nl_phrase": "Emit signal"
+    },
+    {
+      "id": "initiate_signal_audit",
+      "type": "audit_log",
+      "message": "Signal initiated with strength 0.9",
+      "metadata": {
+        "origin": "SignalHub",
+        "timestamp": "2025-05-22T10:15:00Z",
+        "signal_id": "SIG_002",
+        "hash": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c"
+      },
+      "nl_phrase": "Log signal initiation"
+    }
+  ],
+  "invariants": [
+    {
+      "condition": {
+        "compare": {
+          "left": {
+            "get": "trust_score"
+          },
+          "op": ">=",
+          "right": 0.7
+        }
+      },
+      "message": "Trust score must be at least 0.7",
+      "severity": "error"
+    },
+    {
+      "condition": {
+        "get": "soul_credential"
+      },
+      "message": "Soul credential must be valid",
+      "severity": "error"
+    },
+    {
+      "condition": {
+        "compare": {
+          "left": {
+            "get": "quorum_percentage"
+          },
+          "op": ">=",
+          "right": 0.67
+        }
+      },
+      "message": "Quorum percentage must be at least 0.67",
+      "severity": "error"
+    }
+  ],
+  "attestation": {
+    "signers": [
+      "0xabcdef1234567890abcdef1234567890abcdef12",
+      "0x1234567890abcdef1234567890abcdef12345678"
+    ],
+    "signature": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+    "hash": "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+  },
+  "execution_policy": {
+    "max_runs_per_minute": 60,
+    "max_concurrent_runs": 10,
+    "priority": "medium"
+  }
+}

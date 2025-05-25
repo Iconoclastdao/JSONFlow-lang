@@ -1,0 +1,318 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/frontend/frontend-agent.schema.json",
+  "title": "SovereignFrontendAgent",
+  "description": "Schema for a self-sovereign frontend agent managing casino dashboard UI components and interactions.",
+  "type": "object",
+  "required": ["id", "name", "type", "coreLogic", "identity", "ritualHooks", "frontend"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Globally unique identifier for the frontend agent.",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable agent label.",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": ["frontend", "dashboard", "nl"],
+      "default": "frontend",
+      "description": "Core modality of the agent, focused on frontend or dashboard."
+    },
+    "identity": {
+      "type": "object",
+      "description": "Cryptographic identity and DID info.",
+      "properties": {
+        "publicKey": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+        "did": { "type": "string", "format": "uri" },
+        "signature": { "type": "string", "pattern": "^0x[a-fA-F0-9]+$" },
+        "created": { "type": "string", "format": "date-time" },
+        "soulboundId": { "type": "string", "minLength": 1, "description": "Non-transferable token ID" }
+      },
+      "required": ["publicKey", "did", "signature", "created", "soulboundId"]
+    },
+    "coreLogic": {
+      "type": "string",
+      "description": "Path to core logic code file for casino dashboard workflows."
+    },
+    "epigenetics": {
+      "type": "object",
+      "description": "Mutable overlays for dynamic UI behavior.",
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["game_update", "bet_placed", "nlp_input"] }
+        },
+        "mutations": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "description": "Embedded memory store for casino dashboard context.",
+      "properties": {
+        "shortTerm": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "longTerm": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "blockchain_state": {
+              "type": "object",
+              "properties": {
+                "ethereum": {
+                  "type": "object",
+                  "properties": {
+                    "block": { "type": "integer" },
+                    "stateRoot": { "type": "string" }
+                  }
+                }
+              }
+            },
+            "environment": {
+              "type": "object",
+              "properties": {
+                "runtime": { "type": "string", "default": "browser" },
+                "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+                "dependencies_loaded": {
+                  "type": "array",
+                  "items": { "type": "string", "enum": ["react", "axios", "chart.js", "tailwindcss"] }
+                },
+                "theme": { "type": "object" }
+              }
+            },
+            "casino_state": {
+              "type": "object",
+              "properties": {
+                "active_games": { "type": "array", "items": { "type": "string" } },
+                "bets": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "description": "Event-action links for casino dashboard interactions.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": ["game_updated", "bet_placed", "nlp_submitted", "component_mounted"]
+          },
+          "target": { "type": "string", "minLength": 1 },
+          "action": {
+            "type": "string",
+            "enum": ["render_component", "update_layout", "fetch_data", "execute_ritual"]
+          }
+        },
+        "required": ["event", "target", "action"]
+      }
+    },
+    "ritualHooks": {
+      "type": "object",
+      "description": "Trigger rituals at frontend lifecycle moments.",
+      "properties": {
+        "onMount": { "type": "string", "description": "Ritual on agent initialization." },
+        "onUpdate": { "type": "string", "description": "Ritual on state update." },
+        "onSignal": { "type": "string", "description": "Ritual on external signal." },
+        "onReflect": { "type": "string", "description": "Ritual for self-reflection." },
+        "onFail": { "type": "string", "description": "Ritual on failure." }
+      },
+      "required": ["onMount", "onUpdate"]
+    },
+    "nlBindings": {
+      "type": "object",
+      "description": "Natural language interface for casino dashboard intents.",
+      "properties": {
+        "intentMap": {
+          "type": "object",
+          "properties": {
+            "update_layout": { "type": "string" },
+            "place_bet": { "type": "string" },
+            "get_games": { "type": "string" }
+          }
+        },
+        "fallbackAction": { "type": "string", "default": "display_help" }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["render_ui", "fetch_data", "execute_ritual", "update_layout"] },
+      "uniqueItems": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "degraded"],
+      "default": "active"
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "5.3.1" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "1.0.0" },
+        "author": { "type": "string", "default": "xAI Team" },
+        "description": { "type": "string", "default": "Frontend agent for casino dashboard" },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["frontend", "casino", "dashboard"]
+        },
+        "dependencies": {
+          "type": "object",
+          "properties": {
+            "casino": { "$ref": "../casino/casino.schema.json" },
+            "dashboard": { "$ref": "../dashboards/dashboard.schema.json" }
+          }
+        }
+      },
+      "required": ["schema_version", "version", "author", "description"]
+    },
+    "frontend": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "framework", "component"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "framework": { "type": "string", "enum": ["react"] },
+              "component": { "type": "string", "enum": ["CasinoGamesPanel", "CasinoStatsPanel", "NaturalLanguagePanel"] },
+              "props": {
+                "type": "object",
+                "properties": {
+                  "widgetId": { "type": "string" },
+                  "dashboardId": { "type": "string" }
+                }
+              },
+              "css": {
+                "type": "object",
+                "properties": {
+                  "className": { "type": "string", "default": "panel col-span-4" },
+                  "style": { "type": "object" }
+                }
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "layout": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "integer", "minimum": 0 },
+            "y": { "type": "integer", "minimum": 0 },
+            "w": { "type": "integer", "minimum": 1 },
+            "h": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["x", "y", "w", "h"]
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["event", "action"],
+            "properties": {
+              "event": { "type": "string", "enum": ["click", "submit", "mount"] },
+              "action": { "type": "string", "enum": ["fetch_data", "update_state", "trigger_ritual"] },
+              "target": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      },
+      "required": ["components", "layout"]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "oneOf": [
+          {
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "const": "blockchain_operation" },
+              "chain": { "type": "string", "enum": ["ethereum"] },
+              "action": { "type": "string", "enum": ["verify_soulbound", "register_component"] },
+              "params": { "type": "object" },
+              "target": { "type": "string", "minLength": 1 },
+              "ui": { "$ref": "#/$defs/ui" }
+            },
+            "required": ["id", "type", "chain", "action", "params", "target"]
+          },
+          {
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "const": "ritual_execute" },
+              "ritual": { "type": "string", "minLength": 1 },
+              "parameters": { "type": "object" },
+              "target": { "type": "string", "minLength": 1 },
+              "ui": { "$ref": "#/$defs/ui" }
+            },
+            "required": ["id", "type", "ritual", "target"]
+          }
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "ui": {
+      "type": "object",
+      "properties": {
+        "framework": { "type": "string", "enum": ["react"] },
+        "component": { "type": "string", "minLength": 1 },
+        "props": { "type": "object" },
+        "css": {
+          "type": "object",
+          "properties": {
+            "className": { "type": "string" },
+            "style": { "type": "object" }
+          }
+        }
+      },
+      "required": ["framework", "component"]
+    },
+    "expr": {
+      "type": "object",
+      "properties": {
+        "get": { "type": "string" },
+        "compare": {
+          "type": "object",
+          "properties": {
+            "left": { "$ref": "#/$defs/valueOrExpr" },
+            "op": { "type": "string", "enum": ["<", ">", "===", "<=", ">=", "!=="] },
+            "right": { "$ref": "#/$defs/valueOrExpr" }
+          }
+        }
+      }
+    },
+    "valueOrExpr": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "object" },
+        { "type": "array" },
+        { "type": "null" },
+        { "$ref": "#/$defs/expr" }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

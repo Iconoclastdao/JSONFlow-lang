@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/api/api.schema.json",
+  "title": "api.schema",
+  "type": "object",
+  "description": "Comprehensive API schema for the Sovereign decentralized application system, aligned with JSONFlow Ultimate Workflow Schema v5.3.1.",
+  "required": ["function", "schema", "metadata", "security", "observability", "orchestration"],
+  "properties": {
+    "function": {
+      "type": "string",
+      "description": "Unique identifier for the API workflow.",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+      "examples": ["sovereignApi"]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata for versioning and documentation.",
+      "properties": {
+        "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "5.3.1" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "examples": ["1.0.0"] },
+        "author": { "type": "string", "examples": ["xAI Team"] },
+        "description": { "type": "string", "examples": ["Sovereign DApp API with blockchain and governance integration."] },
+        "created": { "type": "string", "format": "date-time", "examples": ["2025-05-24T20:30:00Z"] },
+        "updated": { "type": "string", "format": "date-time", "examples": ["2025-05-24T20:30:00Z"] },
+        "tags": { "type": "array", "items": { "type": "string" }, "examples": [["api", "blockchain", "governance"]] },
+        "visualization": { "type": "string", "examples": ["graph TD\nA[Start] --> B[Authenticate]\nB --> C[Process Request]\nC --> D[Log Metrics]"] },
+        "examples": { "type": "array", "items": { "type": "string", "format": "uri" }, "examples": [["https://github.com/xai/sovereign-api-examples"]] },
+        "docs": { "type": "string", "format": "uri", "examples": ["https://docs.xai/sovereign-api"] },
+        "tooling": { "type": "array", "items": { "type": "string", "enum": ["vscode", "jsonflow-cli", "openapi"] }, "examples": [["vscode", "jsonflow-cli"]] },
+        "compliance": { "type": "array", "items": { "type": "string", "enum": ["GDPR", "PCI-DSS"] }, "examples": [["GDPR", "PCI-DSS"]] },
+        "license": { "type": "string", "enum": ["MIT"], "examples": ["MIT"] }
+      },
+      "required": ["schema_version", "version", "author", "description", "examples", "docs", "license"]
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE"] },
+                "description": { "type": "string", "minLength": 1 }
+              },
+              "required": ["path", "method", "description"]
+            },
+            "request": {
+              "type": "object",
+              "properties": {
+                "endpointId": { "type": "string", "format": "uuid" },
+                "userId": { "type": "string", "minLength": 1 },
+                "payload": { "type": "object" }
+              },
+              "required": ["endpointId", "payload"]
+            },
+            "response": {
+              "type": "object",
+              "properties": {
+                "requestId": { "type": "string", "format": "uuid" },
+                "data": { "type": "object" },
+                "statusCode": { "type": "number", "minimum": 100, "maximum": 599 }
+              },
+              "required": ["requestId", "data", "statusCode"]
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "endpointResult": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "status": { "type": "string", "enum": ["active", "inactive"] },
+                "createdAt": { "type": "string", "format": "date-time" }
+              },
+              "required": ["id", "status", "createdAt"],
+              "destination": "database"
+            },
+            "requestResult": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "status": { "type": "string", "enum": ["received", "processed"] },
+                "timestamp": { "type": "string", "format": "date-time" }
+              },
+              "required": ["id", "status", "timestamp"],
+              "destination": "database"
+            },
+            "responseResult": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "statusCode": { "type": "number", "minimum": 100, "maximum": 599 },
+                "timestamp": { "type": "string", "format": "date-time" }
+              },
+              "required": ["id", "statusCode", "timestamp"],
+              "destination": "database"
+            }
+          }
+        }
+      },
+      "required": ["inputs", "outputs"]
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "authentication": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["jwt", "oauth2"], "default": "jwt" },
+            "provider": { "type": "string", "enum": ["auth0", "custom"], "default": "custom" }
+          },
+          "required": ["type"]
+        },
+        "authorization": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["rbac"], "default": "rbac" },
+            "roles": { "type": "array", "items": { "type": "string" }, "examples": [["admin", "user"]] },
+            "permissions": { "type": "array", "items": { "type": "string" }, "examples": [["register_endpoint", "log_request"]] }
+          },
+          "required": ["type", "roles", "permissions"]
+        },
+        "encryption": {
+          "type": "object",
+          "properties": {
+            "algorithm": { "type": "string", "enum": ["AES-256"], "default": "AES-256" },
+            "key_management": { "type": "string", "enum": ["vault"], "default": "vault" }
+          },
+          "required": ["algorithm"]
+        },
+        "secrets": {
+          "type": "object",
+          "properties": {
+            "manager": { "type": "string", "enum": ["hashicorp-vault"], "default": "hashicorp-vault" },
+            "refs": { "type": "array", "items": { "type": "string" }, "examples": [["api_key_ref"]] }
+          },
+          "required": ["manager"]
+        }
+      },
+      "required": ["authentication", "authorization", "encryption", "secrets"]
+    },
+    "observability": {
+      "type": "object",
+      "properties": {
+        "logging": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["loki"], "default": "loki" },
+            "level": { "type": "string", "enum": ["info", "error"], "default": "info" }
+          },
+          "required": ["provider"]
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["prometheus"], "default": "prometheus" },
+            "endpoints": { "type": "array", "items": { "type": "string", "format": "uri" }, "examples": [["http://metrics.sovereign.local"]] }
+          },
+          "required": ["provider"]
+        },
+        "tracing": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["opentelemetry"], "default": "opentelemetry" },
+            "sampling_rate": { "type": "number", "minimum": 0, "maximum": 1, "default": 1 }
+          },
+          "required": ["provider"]
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["opentelemetry"], "default": "opentelemetry" }
+          },
+          "required": ["provider"]
+        }
+      },
+      "required": ["logging", "metrics", "tracing", "telemetry"]
+    },
+    "orchestration": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["sequential"], "default": "sequential" },
+        "runtime": { "type": "string", "enum": ["nodejs"], "default": "nodejs" }
+      },
+      "required": ["type", "runtime"]
+    }
+  },
+  "additionalProperties": false
+}

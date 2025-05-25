@@ -1,0 +1,198 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/casino/casino.schema.json",
+  "title": "Sovereign Casino Module Schema",
+  "type": "object",
+  "description": "Schema for the Sovereign DApp casino module, aligned with JSONFlow Ultimate Workflow Schema v5.3.1.",
+  "required": ["function", "schema", "metadata", "security", "observability", "orchestration"],
+  "properties": {
+    "function": {
+      "type": "string",
+      "description": "Unique identifier for the casino workflow.",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+      "examples": ["casinoModule"]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata for versioning and documentation.",
+      "properties": {
+        "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "5.3.1" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "examples": ["1.0.0"] },
+        "author": { "type": "string", "examples": ["xAI Team"] },
+        "description": { "type": "string", "examples": ["Casino module for game creation and betting."] },
+        "created": { "type": "string", "format": "date-time", "examples": ["2025-05-24T20:38:00Z"] },
+        "updated": { "type": "string", "format": "date-time", "examples": ["2025-05-24T20:38:00Z"] },
+        "tags": { "type": "array", "items": { "type": "string" }, "examples": [["casino", "blockchain", "betting"]] },
+        "visualization": { "type": "string", "examples": ["graph TD\nA[Start] --> B[Create Game]\nB --> C[Place Bet]\nC --> D[Resolve Game]"] },
+        "examples": { "type": "array", "items": { "type": "string", "format": "uri" }, "examples": [["https://github.com/xai/casino-examples"]] },
+        "docs": { "type": "string", "format": "uri", "examples": ["https://docs.xai/casino"] },
+        "tooling": { "type": "array", "items": { "type": "string", "enum": ["vscode", "jsonflow-cli", "ethers.js"] }, "examples": [["vscode", "jsonflow-cli"]] },
+        "compliance": { "type": "array", "items": { "type": "string", "enum": ["GDPR", "PCI-DSS"] }, "examples": [["GDPR", "PCI-DSS"]] },
+        "license": { "type": "string", "enum": ["MIT"], "examples": ["MIT"] }
+      },
+      "required": ["schema_version", "version", "author", "description", "examples", "docs", "license"]
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "properties": {
+            "createGame": {
+              "type": "object",
+              "properties": {
+                "gameType": { "type": "string", "enum": ["dice", "roulette", "slots"], "description": "Type of casino game." },
+                "parameters": { "type": "object", "description": "Game-specific parameters." },
+                "userId": { "type": "string", "format": "uuid", "description": "User initiating the game." }
+              },
+              "required": ["gameType", "parameters", "userId"]
+            },
+            "placeBet": {
+              "type": "object",
+              "properties": {
+                "gameId": { "type": "string", "format": "uuid", "description": "Unique game identifier." },
+                "amount": { "type": "number", "minimum": 0.01, "description": "Bet amount in USD." },
+                "userId": { "type": "string", "format": "uuid", "description": "User placing the bet." }
+              },
+              "required": ["gameId", "amount", "userId"]
+            },
+            "resolveGame": {
+              "type": "object",
+              "properties": {
+                "gameId": { "type": "string", "format": "uuid", "description": "Unique game identifier." },
+                "userId": { "type": "string", "format": "uuid", "description": "User resolving the game." }
+              },
+              "required": ["gameId", "userId"]
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "gameResult": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "status": { "type": "string", "enum": ["active", "resolved"] },
+                "createdAt": { "type": "string", "format": "date-time" }
+              },
+              "required": ["id", "status", "createdAt"],
+              "destination": "blockchain"
+            },
+            "betResult": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "status": { "type": "string", "enum": ["placed", "settled"] },
+                "timestamp": { "type": "string", "format": "date-time" }
+              },
+              "required": ["id", "status", "timestamp"],
+              "destination": "blockchain"
+            }
+          }
+        }
+      },
+      "required": ["inputs", "outputs"]
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "authentication": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["jwt"], "default": "jwt" },
+            "provider": { "type": "string", "enum": ["auth0"], "default": "auth0" }
+          },
+          "required": ["type"]
+        },
+        "authorization": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["rbac"], "default": "rbac" },
+            "roles": { "type": "array", "items": { "type": "string" }, "examples": [["player", "admin"]] },
+            "permissions": { "type": "array", "items": { "type": "string" }, "examples": [["create_game", "place_bet", "resolve_game"]] }
+          },
+          "required": ["type", "roles", "permissions"]
+        },
+        "encryption": {
+          "type": "object",
+          "properties": {
+            "algorithm": { "type": "string", "enum": ["AES-256"], "default": "AES-256" },
+            "key_management": { "type": "string", "enum": ["vault"], "default": "vault" }
+          },
+          "required": ["algorithm"]
+        },
+        "secrets": {
+          "type": "object",
+          "properties": {
+            "manager": { "type": "string", "enum": ["hashicorp-vault"], "default": "hashicorp-vault" },
+            "refs": { "type": "array", "items": { "type": "string" }, "examples": [["casino_key_ref"]] }
+          },
+          "required": ["manager"]
+        }
+      },
+      "required": ["authentication", "authorization", "encryption", "secrets"]
+    },
+    "observability": {
+      "type": "object",
+      "properties": {
+        "logging": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["loki"], "default": "loki" },
+            "level": { "type": "string", "enum": ["info", "error"], "default": "info" }
+          },
+          "required": ["provider"]
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["prometheus"], "default": "prometheus" },
+            "endpoints": { "type": "array", "items": { "type": "string", "format": "uri" }, "examples": [["http://metrics.sovereign.local/casino"]] }
+          },
+          "required": ["provider"]
+        },
+        "tracing": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["opentelemetry"], "default": "opentelemetry" },
+            "sampling_rate": { "type": "number", "minimum": 0, "maximum": 1, "default": 1 }
+          },
+          "required": ["provider"]
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string", "enum": ["opentelemetry"], "default": "opentelemetry" }
+          },
+          "required": ["provider"]
+        }
+      },
+      "required": ["logging", "metrics", "tracing", "telemetry"]
+    },
+    "orchestration": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["sequential"], "default": "sequential" },
+        "runtime": { "type": "string", "enum": ["nodejs"], "default": "nodejs" }
+      },
+      "required": ["type", "runtime"]
+    },
+    "blockchain": {
+      "type": "object",
+      "properties": {
+        "chain": { "type": "string", "enum": ["ethereum"], "default": "ethereum" },
+        "network": {
+          "type": "object",
+          "properties": {
+            "rpc_url": { "type": "string", "format": "uri", "examples": ["https://mainnet.infura.io/v3/YOUR_PROJECT_ID"] },
+            "chain_id": { "type": "integer", "minimum": 1, "examples": [1] }
+          },
+          "required": ["rpc_url", "chain_id"]
+        }
+      },
+      "required": ["chain", "network"]
+    }
+  },
+  "additionalProperties": false
+}

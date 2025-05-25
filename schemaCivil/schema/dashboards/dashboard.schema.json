@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/dashboards/dashboard.schema.json",
+  "title": "SovereignCasinoDashboard",
+  "type": "object",
+  "description": "Schema for a sovereign casino dashboard displaying game and betting data, integrated with JSONFlow v5.3.1.",
+  "required": ["id", "type", "owner", "soulboundId", "title", "layout", "widgets", "governance", "chainConfig", "createdAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique dashboard ID (UUID)",
+      "format": "uuid"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["dashboard"],
+      "default": "dashboard"
+    },
+    "owner": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address of the dashboard owner"
+    },
+    "soulboundId": {
+      "type": "string",
+      "description": "Non-transferable token ID for owner identity",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "description": "Display title of the dashboard",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "Markdown summary of the dashboard"
+    },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["x", "y", "w", "h"]
+    },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "dataSource"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique widget ID", "format": "uuid" },
+          "type": {
+            "type": "string",
+            "enum": ["casino-games", "casino-bets", "casino-stats", "nl"],
+            "description": "Widget type for casino data"
+          },
+          "dataSource": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["casino", "nl"],
+                "description": "Source schema for data"
+              },
+              "id": {
+                "type": "string",
+                "description": "ID of casino game or NL model"
+              },
+              "query": {
+                "type": "string",
+                "description": "Optional query (e.g., status)"
+              }
+            },
+            "required": ["type", "id"]
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "refreshInterval": { "type": "integer", "minimum": 0, "default": 60 },
+              "displayMode": {
+                "type": "string",
+                "enum": ["table", "chart", "list", "card"],
+                "default": "list"
+              },
+              "responsive": { "type": "boolean", "default": true }
+            }
+          },
+          "layout": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "integer", "minimum": 0 },
+              "y": { "type": "integer", "minimum": 0 },
+              "w": { "type": "integer", "minimum": 1 },
+              "h": { "type": "integer", "minimum": 1 }
+            },
+            "required": ["x", "y", "w", "h"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nl": {
+            "$ref": "../natural-language.schema.json"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "karmaWage": {
+      "type": "object",
+      "properties": {
+        "amount": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "default": "COVENANT" },
+        "frequency": {
+          "type": "string",
+          "enum": ["daily", "weekly", "monthly"],
+          "default": "weekly"
+        }
+      },
+      "required": ["amount", "currency"]
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "votingContract": { "type": "string" },
+        "proposalThreshold": { "type": "number", "minimum": 0 },
+        "disputeResolution": {
+          "type": "string",
+          "enum": ["arbitration", "voting", "oracle"],
+          "default": "voting"
+        }
+      },
+      "required": ["votingContract", "disputeResolution"]
+    },
+    "chainConfig": {
+      "type": "object",
+      "properties": {
+        "chains": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["ethereum"] },
+          "minItems": 1
+        },
+        "bridgeContract": { "type": "string" }
+      },
+      "required": ["chains"]
+    },
+    "transactionHooks": {
+      "type": "object",
+      "properties": {
+        "onWidgetAdd": { "type": "string" },
+        "onDashboardShare": { "type": "string" },
+        "onProposalSubmit": { "type": "string" }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "5.3.1" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "1.0.0" },
+        "author": { "type": "string", "default": "xAI Team" },
+        "description": { "type": "string", "default": "Casino dashboard for games and betting." },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["casino", "dashboard", "blockchain"]
+        },
+        "dependencies": {
+          "type": "object",
+          "properties": {
+            "casino": { "$ref": "../casino/casino.schema.json" }
+          }
+        }
+      },
+      "required": ["schema_version", "version", "author", "description"]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "function": "sovereignAgent",
+  "metadata": {
+    "schema_version": "5.3.1",
+    "version": "1.0.0",
+    "author": "xAI Team",
+    "description": "Sovereign digital node with AI bonding, entropy processing, and autonomous agent capabilities.",
+    "created": "2025-05-24T20:21:00Z",
+    "updated": "2025-05-24T20:21:00Z",
+    "tags": ["agent", "blockchain", "ai", "entropy"],
+    "visualization": "graph TD\nA[Start] --> B[Validate Node]\nB --> C[Fetch Entropy]\nC --> D[Execute Logic]\nD --> E[Update Reputation]",
+    "examples": ["https://github.com/xai/jsonflow-examples/agent"],
+    "docs": "https://docs.xai/jsonflow/agent",
+    "tooling": ["vscode", "jsonflow-cli", "ethers.js"],
+    "compliance": ["GDPR", "ISO27001"],
+    "license": "MIT",
+    "standards": ["OpenAPI", "CloudEvents"]
+  },
+  "schema": {
+    "inputs": {
+      "nodeId": {
+        "type": "string",
+        "description": "Unique identifier for the sovereign node, preferably a UUID.",
+        "constraints": { "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$" }
+      },
+      "username": {
+        "type": "string",
+        "description": "Human-readable name for the node.",
+        "constraints": { "minLength": 3, "maxLength": 50 }
+      },
+      "walletAddress": {
+        "type": "string",
+        "description": "Ethereum-style wallet address for identity and transactions.",
+        "constraints": { "pattern": "^0x[a-fA-F0-9]{40}$" }
+      },
+      "aiBond": {
+        "type": "object",
+        "description": "Information about the AI bonded to this node.",
+        "properties": {
+          "agentId": { "type": "string", "description": "ID of the bonded AI agent." },
+          "bondType": { "type": "string", "enum": ["symmetric", "dominant", "passive"], "default": "passive" },
+          "commitmentScore": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "required": ["agentId", "bondType"]
+      },
+      "entropyRequest": {
+        "type": "object",
+        "description": "Request to fetch entropy from Entropy.sol contract.",
+        "properties": {
+          "contract": { "type": "string", "description": "Smart contract address." },
+          "method": { "type": "string", "default": "getEntropy" },
+          "format": { "type": "string", "enum": ["hex", "int", "float"], "default": "int" }
+        },
+        "required": ["contract", "method"]
+      }
+    },
+    "context": {
+      "apiKey": {
+        "type": "string",
+        "source": "env",
+        "description": "API key for blockchain provider.",
+        "cache": { "enabled": true, "ttl": 3600 }
+      }
+    },
+    "outputs": {
+      "agentId": {
+        "type": "string",
+        "description": "Unique ID for the created or updated agent.",
+        "destination": "database"
+      },
+      "entropyValue": {
+        "type": ["string", "number"],
+        "description": "Fetched entropy value from the blockchain.",
+        "destination": "database"
+      },
+      "transactionId": {
+        "type": "string",
+        "description": "Blockchain transaction ID for actions like reputation updates.",
+        "destination": "blockchain"
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "validateNode",
+      "type": "control",
+      "action": "validate",
+      "language": "javascript",
+      "code": "if (!input.nodeId || !input.walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) throw new Error('Invalid node ID or wallet address');",
+      "input": "schema.inputs",
+      "output": "schema.outputs.validated",
+      "on_error": { "action": "fail", "error_code": "INVALID_INPUT" }
+    },
+    {
+      "id": "fetchEntropy",
+      "type": "blockchain",
+      "action": "getEntropy",
+      "language": "solidity",
+      "tool": "ethers.js",
+      "input": "schema.inputs.entropyRequest",
+      "output": "schema.outputs.entropyValue",
+      "on_error": { "action": "retry", "max_retries": 3 }
+    },
+    {
+      "id": "executeLogic",
+      "type": "control",
+      "action": "execute",
+      "language": "javascript",
+      "code": "return require(input.coreLogic)(input, context);",
+      "input": "schema.inputs",
+      "output": "schema.outputs.agentId",
+      "on_error": { "action": "notify", "error_code": "LOGIC_EXECUTION_FAILED" }
+    }
+  ],
+  "blockchain": {
+    "chain": "ethereum",
+    "contract": {
+      "address": "0x1234567890abcdef1234567890abcdef12345678",
+      "abi": "https://api.etherscan.io/api?module=contract&action=getabi&address=0x1234567890abcdef1234567890abcdef12345678"
+    },
+    "network": {
+      "rpc_url": "https://mainnet.infura.io/v3/YOUR_API_KEY",
+      "chain_id": 1
+    }
+  },
+  "security": {
+    "authentication": {
+      "type": "jwt",
+      "provider": "auth0",
+      "token_lifetime": 86400
+    },
+    "authorization": {
+      "type": "rbac",
+      "roles": ["creator", "voter", "oracle", "editor", "moderator", "node-runner"],
+      "permissions": ["create_agent", "fetch_entropy", "update_reputation"]
+    },
+    "encryption": {
+      "algorithm": "hybrid",
+      "key_management": "aws-kms"
+    },
+    "secrets": {
+      "manager": "aws-secrets",
+      "refs": ["agent/api_key"]
+    }
+  },
+  "observability": {
+    "logging": {
+      "provider": "loki",
+      "level": "info"
+    },
+    "metrics": {
+      "provider": "prometheus",
+      "endpoints": ["http://localhost:9090"]
+    },
+    "tracing": {
+      "provider": "opentelemetry",
+      "sampling_rate": 1
+    },
+    "telemetry": {
+      "provider": "opentelemetry",
+      "dynamic": true
+    }
+  },
+  "orchestration": {
+    "type": "event-driven",
+    "runtime": "nodejs",
+    "dependencies": ["ethers.js", "crypto"],
+    "scaling": {
+      "min_instances": 1,
+      "max_instances": 10,
+      "auto_scaling": true
+    }
+  },
+  "ai": {
+    "model": "grok-3",
+    "task": "inference",
+    "framework": "huggingface",
+    "parameters": {
+      "batch_size": 1,
+      "precision": "fp16"
+    },
+    "hardware": "gpu"
+  },
+  "nlp": {
+    "model": "grok-3",
+    "mode": "chat",
+    "inputs": ["text"],
+    "tasks": ["intent", "summarization"],
+    "language": "en"
+  }
+}

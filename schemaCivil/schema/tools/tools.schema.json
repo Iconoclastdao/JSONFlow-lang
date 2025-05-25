@@ -1,0 +1,250 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sovereign-revelation.org/schema/tools/tools.schema.json",
+  "title": "SovereignToolsV2",
+  "type": "object",
+  "description": "Enhanced schema for developer tools with cross-tool integration and stricter validations.",
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]{1,50}$", "default": "sovereign-tools" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 100, "default": "Sovereign Tools" },
+    "type": { "type": "string", "enum": ["tools"], "default": "tools" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "default": "2.0.0" },
+    "lastModified": { "type": "string", "format": "date-time", "default": "2025-05-24T17:08:00Z" },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "executionTimeout": { "type": "integer", "minimum": 100, "maximum": 5000, "default": 1000 },
+        "apiKey": { "type": "string", "minLength": 0, "maxLength": 256 },
+        "maxVersionHistory": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 }
+      },
+      "required": ["executionTimeout", "maxVersionHistory"]
+    },
+    "layout": {
+      "type": "object",
+      "required": ["x", "y", "w", "h", "responsive", "theme"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 },
+        "responsive": { "type": "boolean", "default": true },
+        "theme": { "type": "string", "enum": ["light", "dark", "custom"], "default": "light" }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "required": ["codeEditor", "dataVisualizer", "contractDeployer", "apiTester"],
+      "properties": {
+        "codeEditor": {
+          "type": "object",
+          "required": ["language", "mode", "code", "runButton", "enableAIHinting", "output", "versionControl", "linting", "debugging"],
+          "properties": {
+            "language": {
+              "type": "string",
+              "enum": [
+                "javascript", "typescript", "python", "solidity", "json", "yaml",
+                "jsx", "tsx", "html", "css", "markdown", "vega", "d3", "shell", "rust", "go"
+              ],
+              "default": "javascript"
+            },
+            "mode": {
+              "type": "string",
+              "enum": ["code", "markdown", "chart", "react-preview", "crispr-mode", "ast-view"],
+              "default": "code"
+            },
+            "code": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 100000,
+              "default": "// Start your sovereign expression here"
+            },
+            "runButton": { "type": "boolean", "default": true },
+            "enableAIHinting": { "type": "boolean", "default": false },
+            "output": { "type": "string", "readOnly": true, "default": "" },
+            "expressionPath": {
+              "type": "string",
+              "pattern": "^\\$\\.\\w+(\\.\\w+)*$",
+              "description": "Path to data within tools (e.g., $.tools.apiTester.requests)"
+            },
+            "mutationType": {
+              "type": "string",
+              "enum": ["replace", "splice", "insert", "delete"]
+            },
+            "targetNode": { "type": "string", "minLength": 1, "maxLength": 100 },
+            "versionControl": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["versionId", "code", "timestamp", "commitMessage"],
+                "properties": {
+                  "versionId": { "type": "string", "format": "uuid" },
+                  "code": { "type": "string", "minLength": 0, "maxLength": 100000 },
+                  "timestamp": { "type": "string", "format": "date-time" },
+                  "commitMessage": { "type": "string", "minLength": 1, "maxLength": 1000 }
+                }
+              }
+            },
+            "linting": {
+              "type": "object",
+              "required": ["enabled", "rules"],
+              "properties": {
+                "enabled": { "type": "boolean", "default": true },
+                "rules": { "type": "object", "additionalProperties": true }
+              }
+            },
+            "debugging": {
+              "type": "object",
+              "required": ["breakpoints", "watchVariables"],
+              "properties": {
+                "breakpoints": {
+                  "type": "array",
+                  "items": { "type": "integer", "minimum": 0 }
+                },
+                "watchVariables": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1, "maxLength": 100 }
+                }
+              }
+            }
+          }
+        },
+        "dataVisualizer": {
+          "type": "object",
+          "required": ["dataSource", "visualizationType", "config", "filters"],
+          "properties": {
+            "dataSource": {
+              "type": "string",
+              "format": "uri-reference",
+              "description": "URI, path, or internal reference (e.g., $.tools.apiTester.requests[-1].responseBody)"
+            },
+            "visualizationType": {
+              "type": "string",
+              "enum": ["bar", "line", "pie", "scatter", "heatmap", "graph", "table"],
+              "default": "bar"
+            },
+            "config": {
+              "type": "object",
+              "required": ["interactive"],
+              "properties": {
+                "xAxis": { "type": "string", "minLength": 1 },
+                "yAxis": { "type": "string", "minLength": 1 },
+                "colorScheme": { "type": "string", "default": "default" },
+                "interactive": { "type": "boolean", "default": true },
+                "legend": { "type": "boolean", "default": true }
+              }
+            },
+            "filters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["field", "operator", "value"],
+                "properties": {
+                  "field": { "type": "string", "minLength": 1 },
+                  "operator": { "type": "string", "enum": ["=", ">", "<", ">=", "<=", "!="] },
+                  "value": { "type": ["string", "number", "boolean", "null"] }
+                }
+              }
+            }
+          }
+        },
+        "contractDeployer": {
+          "type": "object",
+          "required": ["contractCode", "network", "compilerVersion", "constructorArgs", "deployments"],
+          "properties": {
+            "contractCode": { "type": "string", "minLength": 0, "maxLength": 100000 },
+            "network": {
+              "type": "string",
+              "enum": ["mainnet", "testnet", "localhost", "custom"],
+              "default": "testnet"
+            },
+            "compilerVersion": { "type": "string", "pattern": "^(latest|v\\d+\\.\\d+\\.\\d+)$", "default": "latest" },
+            "constructorArgs": {
+              "type": "array",
+              "items": { "type": ["string", "number", "boolean", "array"] }
+            },
+            "deployments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["address", "timestamp", "txHash"],
+                "properties": {
+                  "address": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+                  "timestamp": { "type": "string", "format": "date-time" },
+                  "txHash": { "type": "string", "pattern": "^0x[a-fA-F0-9]{64}$" }
+                }
+              }
+            }
+          }
+        },
+        "apiTester": {
+          "type": "object",
+          "required": ["endpoint", "method", "headers", "body", "requests"],
+          "properties": {
+            "endpoint": { "type": "string", "format": "uri" },
+            "method": {
+              "type": "string",
+              "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+              "default": "GET"
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "body": { "type": "string", "minLength": 0, "maxLength": 100000 },
+            "requests": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["timestamp", "responseStatus", "responseBody"],
+                "properties": {
+                  "timestamp": { "type": "string", "format": "date-time" },
+                  "responseStatus": { "type": "integer", "minimum": 100, "maximum": 599 },
+                  "responseBody": { "type": "string", "minLength": 0, "maxLength": 1000000 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceTool", "targetTool", "dataPath"],
+        "properties": {
+          "sourceTool": { "type": "string", "enum": ["codeEditor", "dataVisualizer", "contractDeployer", "apiTester"] },
+          "targetTool": { "type": "string", "enum": ["codeEditor", "dataVisualizer", "contractDeployer", "apiTester"] },
+          "dataPath": { "type": "string", "pattern": "^\\$\\.tools\\.[a-zA-Z]+\\.[a-zA-Z0-9\\.\\[-\\]]+$" },
+          "description": { "type": "string", "minLength": 1, "maxLength": 1000 }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "required": ["auditLog"],
+      "properties": {
+        "auditLog": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["event", "user", "timestamp", "details"],
+            "properties": {
+              "event": {
+                "type": "string",
+                "enum": [
+                  "code_editor_updated", "data_visualizer_configured", "contract_deployed",
+                  "api_tested", "breakpoint_added", "dependency_added"
+                ]
+              },
+              "user": { "type": "string", "format": "uuid" },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "details": { "type": "string", "minLength": 1, "maxLength": 10000 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["id", "title", "type", "version", "lastModified", "settings", "layout", "tools", "dependencies", "compliance"]
+}
